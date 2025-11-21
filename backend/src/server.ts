@@ -9,14 +9,16 @@ import { PHOTOS_DIR, db } from './database/schema.js';
 const app = express();
 const logger = pino({
   level: 'info',
-  transport: {
-    target: 'pino-pretty',
-    options: {
-      colorize: true,
-      translateTime: 'HH:MM:ss',
-      ignore: 'pid,hostname',
+  ...(process.env.NODE_ENV === 'development' ? {
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        colorize: true,
+        translateTime: 'HH:MM:ss',
+        ignore: 'pid,hostname',
+      },
     },
-  },
+  } : {}),
 });
 const PORT = Number(process.env.PORT) || 4000;
 
