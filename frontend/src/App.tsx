@@ -50,7 +50,6 @@ function App() {
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        minHeight: '100vh',
         minHeight: '100dvh',
         color: 'var(--tg-theme-text-color, #1b1b1f)',
         backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)'

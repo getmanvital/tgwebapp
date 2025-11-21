@@ -100,7 +100,7 @@ const ProductCard = ({ product, onContact }: Props) => {
     }
     // Если photos - объект (не массив)
     else if (product.photos && !Array.isArray(product.photos) && typeof product.photos === 'object') {
-      const photoUrl = product.photos.photo_2560 || product.photos.photo_1280 || product.photos.photo_604 || product.photos.url;
+      const photoUrl = product.photos.photo_2560 || product.photos.photo_1280 || product.photos.photo_604;
       if (photoUrl) {
         try {
           const urlObj = new URL(photoUrl);
