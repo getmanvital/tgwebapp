@@ -12,7 +12,12 @@ export const getCollections = async (forceReload = false): Promise<Collection[]>
   const params = forceReload ? { _t: Date.now() } : {};
   
   try {
+    const backendUrl = getBackendUrl();
+    console.log('Fetching collections from:', `${backendUrl}/products/collections`);
+    
     const { data } = await client.get('/products/collections', { params });
+    
+    console.log('Collections response:', data);
     
     if (!data || !Array.isArray(data.items)) {
       console.warn('Unexpected response format:', data);
@@ -21,7 +26,15 @@ export const getCollections = async (forceReload = false): Promise<Collection[]>
     
     return data.items;
   } catch (error: any) {
-    console.error('Error fetching collections:', error);
+    const backendUrl = getBackendUrl();
+    console.error('Error fetching collections:', {
+      error,
+      message: error?.message,
+      response: error?.response?.data,
+      status: error?.response?.status,
+      backendUrl,
+      fullUrl: `${backendUrl}/products/collections`,
+    });
     throw error;
   }
 };

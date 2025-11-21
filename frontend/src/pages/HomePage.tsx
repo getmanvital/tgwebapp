@@ -44,7 +44,10 @@ const HomePage = () => {
       })
       .catch((err) => {
         console.error('Error loading collections:', err);
-        setError('Не удалось загрузить подборки');
+        const errorMessage = err?.response?.status 
+          ? `Ошибка ${err.response.status}: ${err.response.statusText || 'Не удалось подключиться к серверу'}`
+          : err?.message || 'Не удалось загрузить подборки';
+        setError(errorMessage);
         setCollections([]);
       })
       .finally(() => setLoading(false));
