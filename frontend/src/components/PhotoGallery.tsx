@@ -11,6 +11,8 @@ const PhotoGallery = ({ images, initialIndex, onClose, isLoading = false }: Prop
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [direction, setDirection] = useState<'left' | 'right' | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Минимальное расстояние для свайпа
   const minSwipeDistance = 50;
@@ -51,24 +53,43 @@ const PhotoGallery = ({ images, initialIndex, onClose, isLoading = false }: Prop
     const isRightSwipe = distance < -minSwipeDistance;
 
     if (isLeftSwipe && currentIndex < images.length - 1) {
+      setDirection('left');
+      setIsTransitioning(true);
       setCurrentIndex(currentIndex + 1);
     }
     if (isRightSwipe && currentIndex > 0) {
+      setDirection('right');
+      setIsTransitioning(true);
       setCurrentIndex(currentIndex - 1);
     }
   };
 
   const goToPrevious = () => {
-    if (currentIndex > 0) {
+    if (currentIndex > 0 && !isTransitioning) {
+      setDirection('right');
+      setIsTransitioning(true);
       setCurrentIndex(currentIndex - 1);
     }
   };
 
   const goToNext = () => {
-    if (currentIndex < images.length - 1) {
+    if (currentIndex < images.length - 1 && !isTransitioning) {
+      setDirection('left');
+      setIsTransitioning(true);
       setCurrentIndex(currentIndex + 1);
     }
   };
+
+  // Сброс состояния анимации после завершения перехода
+  useEffect(() => {
+    if (isTransitioning) {
+      const timer = setTimeout(() => {
+        setIsTransitioning(false);
+        setDirection(null);
+      }, 300); // Длительность анимации должна совпадать с CSS transition
+      return () => clearTimeout(timer);
+    }
+  }, [isTransitioning, currentIndex]);
 
   if (images.length === 0) return null;
 
@@ -113,11 +134,18 @@ const PhotoGallery = ({ images, initialIndex, onClose, isLoading = false }: Prop
           {isLoading ? (
             <div className="photo-gallery__loading">Загрузка фото...</div>
           ) : (
-            <img
-              src={images[currentIndex]}
-              alt={`Фото ${currentIndex + 1} из ${images.length}`}
-              className="photo-gallery__image"
-            />
+            <div 
+              className={`photo-gallery__image-container ${
+                direction ? `--direction-${direction}` : ''
+              } ${isTransitioning ? '--transitioning' : ''}`}
+            >
+              <img
+                src={images[currentIndex]}
+                alt={`Фото ${currentIndex + 1} из ${images.length}`}
+                className="photo-gallery__image"
+                key={currentIndex}
+              />
+            </div>
           )}
         </div>
 
