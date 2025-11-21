@@ -1,9 +1,10 @@
 import 'dotenv/config';
 import { fetchProductById } from '../services/vkClient.js';
 
-const productId = process.argv[2] ? Number(process.argv[2]) : null;
+const productIdArg = process.argv[2];
+const productId = productIdArg ? Number(productIdArg) : null;
 
-if (!productId) {
+if (!productId || isNaN(productId)) {
   console.error('Usage: npm run get-product-info <productId>');
   console.error('Example: npm run get-product-info 12963521');
   process.exit(1);

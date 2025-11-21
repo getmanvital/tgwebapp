@@ -1,7 +1,6 @@
 import { Router } from 'express';
+import type { ParsedQs } from 'qs';
 
-import mockCollections from '@data/mockCollections.js';
-import mockProducts from '@data/mockProducts.js';
 import { fetchCollections, fetchProducts, fetchAllProducts, enrichProductsWithPhotos, fetchProductById } from '@services/vkClient.js';
 import { parseSizes } from '@utils/sizeParser.js';
 import { cache } from '@services/cache.js';
@@ -19,7 +18,8 @@ const PRODUCTS_CACHE_TTL = 5 * 60 * 1000; // 5 минут
 router.get('/collections', async (_req, res, next) => {
   try {
     if (useMock) {
-      return res.json({ count: mockCollections.length, items: mockCollections });
+      // Mock режим отключен - возвращаем пустой массив
+      return res.json({ count: 0, items: [] });
     }
 
     // Если используется локальная БД, берем данные оттуда
@@ -197,31 +197,8 @@ router.get('/', async (req, res, next) => {
 
   try {
     if (useMock) {
-      let items = mockProducts;
-
-      if (albumId) {
-        items = items.filter((item) => item.albumId === Number(albumId));
-      }
-
-      if (q) {
-        const queryLower = q.toString().toLowerCase();
-        items = items.filter((item) => item.title.toLowerCase().includes(queryLower));
-      }
-
-      if (size) {
-        const sizeLower = size.toString().toLowerCase();
-        items = items.filter((item) =>
-          item.description.toLowerCase().includes(sizeLower) ||
-          item.sizes?.some((s) => s.toLowerCase() === sizeLower),
-        );
-      }
-
-      const itemsWithSizes = items.map((item) => ({
-        ...item,
-        sizes: item.sizes ?? parseSizes(item.description),
-      }));
-
-      return res.json({ count: itemsWithSizes.length, items: itemsWithSizes });
+      // Mock режим отключен - возвращаем пустой массив
+      return res.json({ count: 0, items: [] });
     }
 
     // Если используется локальная БД, берем данные оттуда
@@ -399,7 +376,7 @@ router.get('/', async (req, res, next) => {
     }
 
     // Парсим размеры и применяем фильтр по размеру после получения всех данных
-    let productsWithSizes = enrichedItems.map((item) => {
+    let productsWithSizes = enrichedItems.map((item: any) => {
       // Если нет фото, но есть thumb_photo, создаем массив фото из него
       if ((!item.photos || (Array.isArray(item.photos) && item.photos.length === 0)) && item.thumb_photo) {
         item.photos = [{ photo_1280: item.thumb_photo, photo_604: item.thumb_photo }];
@@ -428,10 +405,13 @@ router.get('/', async (req, res, next) => {
 
     // Применяем фильтр по размеру после загрузки всех товаров
     if (size) {
-      const sizeLower = size.toLowerCase();
-      productsWithSizes = productsWithSizes.filter((item) =>
-        item.description.toLowerCase().includes(sizeLower) ||
-        item.sizes?.some((s) => s.toLowerCase() === sizeLower),
+      // Правильно обрабатываем query параметр size
+      const sizeValue = Array.isArray(size) ? size[0] : size;
+      const sizeStr = typeof sizeValue === 'string' ? sizeValue : String(sizeValue);
+      const sizeLower = sizeStr.toLowerCase();
+      productsWithSizes = productsWithSizes.filter((item: any) =>
+        item.description?.toLowerCase().includes(sizeLower) ||
+        item.sizes?.some((s: string) => s.toLowerCase() === sizeLower),
       );
     }
 
