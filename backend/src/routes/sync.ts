@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { syncCatalog, getSyncProgress, clearDatabase } from '@services/syncService.js';
+import { syncCatalog, getSyncProgress, clearDatabase } from '../services/syncService.js';
 
 const router = Router();
 

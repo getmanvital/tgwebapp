@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import type { ParsedQs } from 'qs';
 
-import { fetchCollections, fetchProducts, fetchAllProducts, enrichProductsWithPhotos, fetchProductById } from '@services/vkClient.js';
-import { parseSizes } from '@utils/sizeParser.js';
-import { cache } from '@services/cache.js';
+import { fetchCollections, fetchProducts, fetchAllProducts, enrichProductsWithPhotos, fetchProductById } from '../services/vkClient.js';
+import { parseSizes } from '../utils/sizeParser.js';
+import { cache } from '../services/cache.js';
 import { collectionsQueries, productsQueries } from '../database/schema.js';
-import { getAllProductPhotos } from '@services/photoService.js';
+import { getAllProductPhotos } from '../services/photoService.js';
 
 const router = Router();
 const useMock = process.env.USE_MOCK_PRODUCTS !== 'false';

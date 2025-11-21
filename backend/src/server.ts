@@ -2,8 +2,8 @@ import 'dotenv/config';
 import express from 'express';
 import pino from 'pino';
 
-import productsRouter from '@routes/products.js';
-import syncRouter from '@routes/sync.js';
+import productsRouter from './routes/products.js';
+import syncRouter from './routes/sync.js';
 import { PHOTOS_DIR, db } from './database/schema.js';
 
 const app = express();
