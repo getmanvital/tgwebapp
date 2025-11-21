@@ -1,11 +1,24 @@
 import { useEffect } from 'react';
 
+export interface TelegramThemeParams {
+  bg_color?: string;
+  text_color?: string;
+  hint_color?: string;
+  link_color?: string;
+  button_color?: string;
+  button_text_color?: string;
+  secondary_bg_color?: string;
+}
+
 declare global {
   interface Window {
     Telegram?: {
       WebApp: {
         ready: () => void;
         expand: () => void;
+        themeParams: TelegramThemeParams;
+        onEvent: (event: string, callback: () => void) => void;
+        offEvent: (event: string, callback: () => void) => void;
         MainButton: {
           text: string;
           show: () => void;

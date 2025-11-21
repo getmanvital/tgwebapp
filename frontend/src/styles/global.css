@@ -1,6 +1,6 @@
 :root {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  color: #1b1b1f;
+  color: var(--tg-theme-text-color, #1b1b1f);
   background-color: var(--tg-theme-bg-color, #f5f5f5);
 }
 
@@ -88,11 +88,11 @@ h1 {
 }
 
 .collection-card {
-  background: #fff;
+  background: var(--tg-theme-secondary-bg-color, #fff);
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border: 2px solid transparent;
 }
@@ -100,6 +100,16 @@ h1 {
 .collection-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Темная тема для карточек коллекций */
+body.tg-theme-dark .collection-card {
+  background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.1));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+body.tg-theme-dark .collection-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .collection-card.--active {
@@ -152,6 +162,17 @@ h1 {
   padding: 10px;
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.1);
+  background: var(--tg-theme-secondary-bg-color, #fff);
+  color: var(--tg-theme-text-color, #1b1b1f);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+/* Темная тема для полей ввода */
+body.tg-theme-dark .filters-bar input,
+body.tg-theme-dark .filters-bar select {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.1));
+  color: var(--tg-theme-text-color, #fff);
 }
 
 .products-grid {
@@ -161,13 +182,20 @@ h1 {
 }
 
 .product-card {
-  background: #fff;
+  background: var(--tg-theme-secondary-bg-color, #fff);
   border-radius: 16px;
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+/* Темная тема для карточек товаров */
+body.tg-theme-dark .product-card {
+  background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.1));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .product-card__image-wrapper {
@@ -212,10 +240,16 @@ h1 {
 
 .product-card__price {
   font-weight: 600;
+  color: var(--tg-theme-text-color, #1b1b1f);
 }
 
 .product-card__sizes.--muted {
-  color: #878a99;
+  color: var(--tg-theme-hint-color, #878a99);
+}
+
+/* Темная тема для текста в карточках товаров */
+body.tg-theme-dark .product-card h3 {
+  color: var(--tg-theme-text-color, #fff);
 }
 
 .product-card button {
@@ -228,6 +262,26 @@ h1 {
 
 .error {
   color: #d7263d;
+}
+
+/* Темная тема - общие стили */
+body.tg-theme-dark {
+  color: var(--tg-theme-text-color, #fff);
+  background-color: var(--tg-theme-bg-color, #1a1a1a);
+}
+
+body.tg-theme-dark h1 {
+  color: var(--tg-theme-text-color, #fff);
+}
+
+body.tg-theme-dark .collection-card__count {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+body.tg-theme-dark .product-card__photo-count {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
 }
 
 /* Photo Gallery Styles */

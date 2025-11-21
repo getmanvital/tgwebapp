@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import HomePage from './pages/HomePage';
 import { useTelegram } from './hooks/useTelegram';
+import { useTelegramTheme } from './hooks/useTelegramTheme';
 
 function App() {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   useTelegram();
+  useTelegramTheme(); // Определяем и применяем тему Telegram
 
   useEffect(() => {
     const isInTelegram = window.Telegram?.WebApp !== undefined;
