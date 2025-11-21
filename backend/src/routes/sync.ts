@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import { syncCatalog, getSyncProgress, clearDatabase } from '../services/syncService.js';
 
 const router = Router();
@@ -7,7 +7,7 @@ const router = Router();
  * Очищает базу данных
  * POST /sync/clear
  */
-router.post('/clear', async (req, res, next) => {
+router.post('/clear', async (req: Request, res: Response, next: NextFunction) => {
   try {
     await clearDatabase();
     res.json({ success: true, message: 'База данных очищена' });
@@ -20,7 +20,7 @@ router.post('/clear', async (req, res, next) => {
  * Запускает синхронизацию каталога с VK
  * POST /sync/start
  */
-router.post('/start', async (req, res, next) => {
+router.post('/start', async (req: Request, res: Response, next: NextFunction) => {
   try {
     // Запускаем синхронизацию асинхронно (не блокируем ответ)
     syncCatalog().catch((error) => {
@@ -46,7 +46,7 @@ router.post('/start', async (req, res, next) => {
  * Получает статус синхронизации
  * GET /sync/status
  */
-router.get('/status', (req, res) => {
+router.get('/status', (req: Request, res: Response) => {
   const progress = getSyncProgress();
   res.json(progress);
 });

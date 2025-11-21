@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import express from 'express';
+import express, { type Request, type Response, type NextFunction } from 'express';
 import pino from 'pino';
 
 import productsRouter from './routes/products.js';
@@ -24,7 +24,7 @@ const PORT = Number(process.env.PORT) || 4000;
 
 
 app.use(express.json());
-app.use((_req, res, next) => {
+app.use((_req: Request, res: Response, next: NextFunction) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
@@ -38,7 +38,7 @@ app.use('/photos', express.static(PHOTOS_DIR, {
   maxAge: '1y', // Кэшируем фото на год
 }));
 
-app.get('/health', (_req, res) => {
+app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: Date.now() });
 });
 

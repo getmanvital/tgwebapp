@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, type Request, type Response, type NextFunction } from 'express';
 import type { ParsedQs } from 'qs';
 
 import { fetchCollections, fetchProducts, fetchAllProducts, enrichProductsWithPhotos, fetchProductById } from '../services/vkClient.js';
@@ -15,7 +15,7 @@ const useLocalDB = process.env.USE_LOCAL_DB === 'true';
 const COLLECTIONS_CACHE_TTL = 10 * 60 * 1000; // 10 минут
 const PRODUCTS_CACHE_TTL = 5 * 60 * 1000; // 5 минут
 
-router.get('/collections', async (_req, res, next) => {
+router.get('/collections', async (_req: Request, res: Response, next: NextFunction) => {
   try {
     if (useMock) {
       // Mock режим отключен - возвращаем пустой массив
@@ -69,7 +69,7 @@ router.get('/collections', async (_req, res, next) => {
  * Получает все фото товара (полные фото, не только обложка)
  * ВАЖНО: Этот маршрут должен быть ПЕРЕД маршрутом '/', иначе он не будет работать
  */
-router.get('/:id/photos', async (req, res, next) => {
+router.get('/:id/photos', async (req: Request, res: Response, next: NextFunction) => {
   const { id } = req.params;
 
   try {
@@ -192,7 +192,7 @@ router.get('/:id/photos', async (req, res, next) => {
   }
 });
 
-router.get('/', async (req, res, next) => {
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   const { album_id: albumId, q, size, offset, count, _t } = req.query;
 
   try {
