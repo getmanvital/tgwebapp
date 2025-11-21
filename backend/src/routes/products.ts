@@ -8,7 +8,6 @@ import { collectionsQueries, productsQueries } from '../database/schema.js';
 import { getAllProductPhotos } from '../services/photoService.js';
 
 const router = Router();
-const useMock = process.env.USE_MOCK_PRODUCTS !== 'false';
 const useLocalDB = process.env.USE_LOCAL_DB === 'true';
 
 // TTL для кэша (в миллисекундах)
@@ -17,11 +16,6 @@ const PRODUCTS_CACHE_TTL = 5 * 60 * 1000; // 5 минут
 
 router.get('/collections', async (_req: Request, res: Response, next: NextFunction) => {
   try {
-    if (useMock) {
-      // Mock режим отключен - возвращаем пустой массив
-      return res.json({ count: 0, items: [] });
-    }
-
     // Если используется локальная БД, берем данные оттуда
     if (useLocalDB) {
       const collections = collectionsQueries.getAll.all();
@@ -73,11 +67,6 @@ router.get('/:id/photos', async (req: Request, res: Response, next: NextFunction
   const { id } = req.params;
 
   try {
-    if (useMock) {
-      // Для моков возвращаем пустой массив
-      return res.json({ photos: [] });
-    }
-
     const productId = Number(id);
     if (isNaN(productId)) {
       return res.status(400).json({ error: 'Invalid product ID' });
@@ -196,11 +185,6 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   const { album_id: albumId, q, size, offset, count, _t } = req.query;
 
   try {
-    if (useMock) {
-      // Mock режим отключен - возвращаем пустой массив
-      return res.json({ count: 0, items: [] });
-    }
-
     // Если используется локальная БД, берем данные оттуда
     if (useLocalDB) {
       let products: any[];

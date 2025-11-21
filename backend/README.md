@@ -31,7 +31,6 @@ cp .env.example .env
 | `MAX_COLLECTIONS_LIMIT` | Лимит подборок для тестирования            | 10           |
 | `MAX_PRODUCTS_LIMIT`    | Лимит товаров в подборке для тестирования  | 20           |
 | `PHOTO_QUALITY`         | Качество загружаемых фото                  | original     |
-| `USE_MOCK_PRODUCTS`     | Использовать мок-данные вместо VK API      | false        |
 | `USE_LOCAL_DB`          | Использовать локальную БД вместо VK API    | false        |
 | `ENRICH_PRODUCTS`       | Обогащать товары полными фото при загрузке | false        |
 
