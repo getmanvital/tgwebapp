@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/collectioncard.tsx","./src/components/filtersbar.tsx","./src/components/photogallery.tsx","./src/components/productcard.tsx","./src/hooks/usetelegram.ts","./src/pages/homepage.tsx","./src/services/api.ts","./src/types/index.ts"],"errors":true,"version":"5.9.3"}
