@@ -2,11 +2,17 @@ import 'dotenv/config';
 import { fetchProductById } from '../services/vkClient.js';
 
 const productIdArg = process.argv[2];
-const productId = productIdArg ? Number(productIdArg) : null;
 
-if (!productId || isNaN(productId)) {
+if (!productIdArg) {
   console.error('Usage: npm run get-product-info <productId>');
   console.error('Example: npm run get-product-info 12963521');
+  process.exit(1);
+}
+
+const productId = Number(productIdArg);
+
+if (isNaN(productId)) {
+  console.error('Error: productId must be a valid number');
   process.exit(1);
 }
 
