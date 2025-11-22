@@ -13,6 +13,7 @@ function App() {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<Page>('home');
+  const [usersPageKey, setUsersPageKey] = useState(0);
   const user = useTelegramUser();
   
   useTelegram();
@@ -87,6 +88,7 @@ function App() {
 
   const handleNavigateToUsers = () => {
     setCurrentPage('users');
+    setUsersPageKey(prev => prev + 1); // Принудительно перемонтируем компонент для обновления данных
   };
 
   const handleNavigateToHome = () => {
@@ -96,7 +98,7 @@ function App() {
   return (
     <>
       {currentPage === 'home' && <HomePage onNavigateToUsers={handleNavigateToUsers} />}
-      {currentPage === 'users' && <UsersPage onBack={handleNavigateToHome} />}
+      {currentPage === 'users' && <UsersPage key={usersPageKey} onBack={handleNavigateToHome} />}
     </>
   );
 }

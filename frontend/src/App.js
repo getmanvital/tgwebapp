@@ -11,6 +11,7 @@ function App() {
     const [isReady, setIsReady] = useState(false);
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState('home');
+    const [usersPageKey, setUsersPageKey] = useState(0);
     const user = useTelegramUser();
     useTelegram();
     useTelegramTheme(); // Определяем и применяем тему Telegram
@@ -70,10 +71,11 @@ function App() {
     }
     const handleNavigateToUsers = () => {
         setCurrentPage('users');
+        setUsersPageKey(prev => prev + 1); // Принудительно перемонтируем компонент для обновления данных
     };
     const handleNavigateToHome = () => {
         setCurrentPage('home');
     };
-    return (_jsxs(_Fragment, { children: [currentPage === 'home' && _jsx(HomePage, { onNavigateToUsers: handleNavigateToUsers }), currentPage === 'users' && _jsx(UsersPage, { onBack: handleNavigateToHome })] }));
+    return (_jsxs(_Fragment, { children: [currentPage === 'home' && _jsx(HomePage, { onNavigateToUsers: handleNavigateToUsers }), currentPage === 'users' && _jsx(UsersPage, { onBack: handleNavigateToHome }, usersPageKey)] }));
 }
 export default App;
