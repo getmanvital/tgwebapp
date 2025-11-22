@@ -2,6 +2,8 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
 import { useState } from 'react';
 import PhotoGallery from './PhotoGallery';
 import { getProductPhotos } from '../services/api';
+import { getBackendUrl } from '../utils/backendUrl';
+import { logger } from '../utils/logger';
 const ProductCard = ({ product, onContact }) => {
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [fullPhotos, setFullPhotos] = useState(null);
@@ -12,7 +14,7 @@ const ProductCard = ({ product, onContact }) => {
         if (product.thumb_photo) {
             // Если это относительный путь, добавляем базовый URL бэкенда
             if (product.thumb_photo.startsWith('/photos/')) {
-                const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
+                const backendUrl = getBackendUrl();
                 return `${backendUrl}${product.thumb_photo}`;
             }
             return product.thumb_photo;
@@ -86,7 +88,7 @@ const ProductCard = ({ product, onContact }) => {
         }
         // Если photos - объект (не массив)
         else if (product.photos && !Array.isArray(product.photos) && typeof product.photos === 'object') {
-            const photoUrl = product.photos.photo_2560 || product.photos.photo_1280 || product.photos.photo_604 || product.photos.url;
+            const photoUrl = product.photos.photo_2560 || product.photos.photo_1280 || product.photos.photo_604;
             if (photoUrl) {
                 try {
                     const urlObj = new URL(photoUrl);
@@ -126,7 +128,7 @@ const ProductCard = ({ product, onContact }) => {
                 const photos = await getProductPhotos(product.id);
                 if (photos.length > 0) {
                     // Преобразуем относительные пути в полные URL и дедуплицируем
-                    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
+                    const backendUrl = getBackendUrl();
                     const seenUrls = new Set();
                     const fullUrls = photos
                         .map((photo) => {
@@ -152,7 +154,7 @@ const ProductCard = ({ product, onContact }) => {
                 }
             }
             catch (error) {
-                console.error('Error loading product photos:', error);
+                logger.error('Error loading product photos:', error);
                 // Если не удалось загрузить, используем только обложку
                 setFullPhotos([thumbPhoto]);
             }
@@ -161,6 +163,6 @@ const ProductCard = ({ product, onContact }) => {
             }
         }
     };
-    return (_jsxs(_Fragment, { children: [_jsxs("article", { className: "product-card", children: [_jsxs("div", { className: `product-card__image-wrapper ${hasMultiplePhotos ? '--has-multiple' : ''}`, onClick: handleImageClick, children: [_jsx("img", { src: thumbPhoto, alt: product.title, loading: "lazy" }), hasMultiplePhotos && (_jsx("div", { className: "product-card__photo-count", children: "\u0444\u043E\u0442\u043E" }))] }), _jsxs("div", { className: "product-card__body", children: [_jsx("h3", { children: product.title }), _jsx("p", { className: "product-card__price", children: product.price?.text }), _jsx("button", { onClick: () => onContact(product), children: "\u041D\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u043C\u0435\u043D\u0435\u0434\u0436\u0435\u0440\u0443" })] })] }), isGalleryOpen && (_jsx(PhotoGallery, { images: fullPhotos || [thumbPhoto], initialIndex: 0, onClose: () => setIsGalleryOpen(false), isLoading: loadingPhotos }))] }));
+    return (_jsxs(_Fragment, { children: [_jsxs("article", { className: "product-card", children: [_jsxs("div", { className: `product-card__image-wrapper ${hasMultiplePhotos ? '--has-multiple' : ''}`, onClick: handleImageClick, children: [_jsx("img", { src: thumbPhoto, alt: product.title, loading: "lazy", decoding: "async" }), hasMultiplePhotos && (_jsx("div", { className: "product-card__photo-count", children: "\u0444\u043E\u0442\u043E" }))] }), _jsxs("div", { className: "product-card__body", children: [_jsx("h3", { children: product.title }), _jsx("p", { className: "product-card__price", children: product.price?.text }), _jsx("button", { onClick: () => onContact(product), children: "\u041D\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u043C\u0435\u043D\u0435\u0434\u0436\u0435\u0440\u0443" })] })] }), isGalleryOpen && (_jsx(PhotoGallery, { images: fullPhotos || [thumbPhoto], initialIndex: 0, onClose: () => setIsGalleryOpen(false), isLoading: loadingPhotos }))] }));
 };
 export default ProductCard;

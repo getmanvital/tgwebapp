@@ -617,6 +617,131 @@ body.tg-theme-dark .skeleton__shimmer {
   );
 }
 
+/* Users List Styles */
+.users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.user-card {
+  background: var(--tg-theme-secondary-bg-color, #fff);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+body.tg-theme-dark .user-card {
+  background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.1));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.user-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+body.tg-theme-dark .user-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.user-card__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.user-card__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.user-card__avatar--placeholder {
+  background: var(--tg-theme-button-color, #0f62fe);
+  color: var(--tg-theme-button-text-color, #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.user-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-card__name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #1b1b1f);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-card__username {
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  color: var(--tg-theme-hint-color, #878a99);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-card__premium {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tg-theme-button-color, #0f62fe);
+  padding: 4px 8px;
+  background: rgba(15, 98, 254, 0.1);
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+body.tg-theme-dark .user-card__premium {
+  background: rgba(15, 98, 254, 0.2);
+}
+
+.user-card__details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+body.tg-theme-dark .user-card__details {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-card__detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.user-card__label {
+  color: var(--tg-theme-hint-color, #878a99);
+  font-weight: 500;
+}
+
+.user-card__value {
+  color: var(--tg-theme-text-color, #1b1b1f);
+  font-weight: 400;
+  text-align: right;
+  word-break: break-word;
+  max-width: 60%;
+}
+
 /* User Auth Status Styles */
 .user-auth-status {
   position: fixed;

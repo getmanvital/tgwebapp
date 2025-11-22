@@ -5,6 +5,13 @@ import pino from 'pino';
 const router = Router();
 const logger = pino();
 
+const ADMIN_USERNAME = 'getmanvit';
+
+// Функция проверки администратора
+const isAdmin = (username: string | undefined | null): boolean => {
+  return username === ADMIN_USERNAME;
+};
+
 interface TelegramUser {
   id: number;
   first_name: string;
@@ -70,6 +77,16 @@ router.post('/user', (req: Request, res: Response) => {
 
 router.get('/users', (req: Request, res: Response) => {
   try {
+    // Проверка прав администратора
+    const adminUsername = req.headers['x-admin-username'] as string | undefined;
+    
+    if (!isAdmin(adminUsername)) {
+      logger.warn({ adminUsername, ip: req.ip }, 'Unauthorized access attempt to /auth/users');
+      return res.status(403).json({ 
+        error: 'Forbidden: Admin access required' 
+      });
+    }
+    
     const users = usersQueries.getAll.all() as any[];
     
     // Преобразуем timestamp в читаемые даты и форматируем данные
@@ -101,6 +118,16 @@ router.get('/users', (req: Request, res: Response) => {
 
 router.get('/users/:id', (req: Request, res: Response) => {
   try {
+    // Проверка прав администратора
+    const adminUsername = req.headers['x-admin-username'] as string | undefined;
+    
+    if (!isAdmin(adminUsername)) {
+      logger.warn({ adminUsername, ip: req.ip }, 'Unauthorized access attempt to /auth/users/:id');
+      return res.status(403).json({ 
+        error: 'Forbidden: Admin access required' 
+      });
+    }
+    
     const userId = parseInt(req.params.id, 10);
     
     if (isNaN(userId)) {

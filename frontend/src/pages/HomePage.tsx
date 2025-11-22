@@ -7,6 +7,7 @@ import ProductCardSkeleton from '../components/ProductCardSkeleton';
 import UserAuthStatus from '../components/UserAuthStatus';
 import { getCollections, getProducts } from '../services/api';
 import { useTelegramUser } from '../hooks/useTelegramUser';
+import { useIsAdmin } from '../hooks/useIsAdmin';
 import type { Collection, Product } from '../types';
 import { logger } from '../utils/logger';
 
@@ -16,8 +17,9 @@ const extractSizes = (items: Product[]): string[] => {
   return Array.from(set).sort();
 };
 
-const HomePage = () => {
+const HomePage = ({ onNavigateToUsers }: { onNavigateToUsers?: () => void }) => {
   const user = useTelegramUser();
+  const isAdmin = useIsAdmin();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<string>();
   const [products, setProducts] = useState<Product[]>([]);
@@ -130,7 +132,32 @@ const HomePage = () => {
             </div>
           </>
         ) : (
-          <h1>Коллекции</h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <h1>Коллекции</h1>
+            {isAdmin && onNavigateToUsers && (
+              <button
+                onClick={onNavigateToUsers}
+                style={{
+                  padding: '8px 16px',
+                  background: 'var(--tg-theme-button-color, #0f62fe)',
+                  color: 'var(--tg-theme-button-text-color, #fff)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '0.9';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '1';
+                }}
+              >
+                👥 Пользователи
+              </button>
+            )}
+          </div>
         )}
       </header>
 

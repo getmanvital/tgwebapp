@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
 import HomePage from './pages/HomePage';
+import UsersPage from './pages/UsersPage';
 import { useTelegram } from './hooks/useTelegram';
 import { useTelegramTheme } from './hooks/useTelegramTheme';
 import { useTelegramUser } from './hooks/useTelegramUser';
 import { saveUser } from './services/api';
 
+type Page = 'home' | 'users';
+
 function App() {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<Page>('home');
   const user = useTelegramUser();
   
   useTelegram();
@@ -74,7 +78,20 @@ function App() {
     );
   }
 
-  return <HomePage />;
+  const handleNavigateToUsers = () => {
+    setCurrentPage('users');
+  };
+
+  const handleNavigateToHome = () => {
+    setCurrentPage('home');
+  };
+
+  return (
+    <>
+      {currentPage === 'home' && <HomePage onNavigateToUsers={handleNavigateToUsers} />}
+      {currentPage === 'users' && <UsersPage onBack={handleNavigateToHome} />}
+    </>
+  );
 }
 
 export default App;

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Collection, Product } from '../types';
+import type { Collection, Product, User } from '../types';
 import { getBackendUrl } from '../utils/backendUrl';
 import { logger } from '../utils/logger';
 
@@ -148,6 +148,38 @@ export const saveUser = async (userData: {
       userId: userData.id,
     });
     // Не пробрасываем ошибку, чтобы не блокировать работу приложения
+  }
+};
+
+export interface UsersResponse {
+  count: number;
+  users: User[];
+}
+
+/**
+ * Получает список всех пользователей (только для администратора)
+ * @param adminUsername - Username администратора для проверки прав
+ * @returns Promise со списком пользователей
+ */
+export const getUsers = async (adminUsername: string): Promise<UsersResponse> => {
+  try {
+    const client = getClient();
+    const { data } = await client.get<UsersResponse>('/auth/users', {
+      headers: {
+        'X-Admin-Username': adminUsername,
+      },
+      timeout: 15000,
+    });
+    
+    logger.debug('[API] Users fetched successfully', { count: data.count });
+    return data;
+  } catch (error: any) {
+    logger.error('[API] Error fetching users:', {
+      error: error?.message,
+      status: error?.response?.status,
+      adminUsername,
+    });
+    throw error;
   }
 };
 

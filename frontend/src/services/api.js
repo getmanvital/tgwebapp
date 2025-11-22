@@ -1,22 +1,64 @@
 import axios from 'axios';
-const client = axios.create({
-    baseURL: import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:4000',
-});
+import { getBackendUrl } from '../utils/backendUrl';
+import { logger } from '../utils/logger';
+// Создаем функцию для получения клиента с актуальным baseURL
+const getClient = () => {
+    const baseURL = getBackendUrl();
+    logger.debug('[API] Creating axios client with baseURL:', baseURL);
+    logger.debug('[API] VITE_BACKEND_URL from env:', import.meta.env.VITE_BACKEND_URL);
+    logger.debug('[API] import.meta.env:', {
+        MODE: import.meta.env.MODE,
+        DEV: import.meta.env.DEV,
+        PROD: import.meta.env.PROD,
+        VITE_BACKEND_URL: import.meta.env.VITE_BACKEND_URL,
+    });
+    return axios.create({
+        baseURL,
+        timeout: 30000, // 30 секунд - достаточный таймаут для большинства запросов
+    });
+};
 export const getCollections = async (forceReload = false) => {
+    const params = forceReload ? { _t: Date.now() } : {};
     try {
-        const params = forceReload ? { _t: Date.now() } : {};
-        console.log('Fetching collections with params:', params);
+        const client = getClient();
+        const backendUrl = getBackendUrl();
+        const fullUrl = `${backendUrl}/products/collections`;
+        logger.debug('[API] Fetching collections from:', fullUrl);
+        logger.debug('[API] Request params:', params);
         const { data } = await client.get('/products/collections', { params });
-        console.log('Collections response:', data);
-        return data.items ?? [];
+        logger.debug('Collections response:', data);
+        if (!data || !Array.isArray(data.items)) {
+            logger.warn('Unexpected response format:', data);
+            return [];
+        }
+        logger.debug('[API] Collections response received:', {
+            count: data?.count,
+            itemsLength: data?.items?.length,
+            data,
+        });
+        return data.items;
     }
     catch (error) {
-        console.error('Error fetching collections:', error);
+        const backendUrl = getBackendUrl();
+        const fullUrl = `${backendUrl}/products/collections`;
+        logger.error('[API] Error fetching collections:', {
+            error,
+            message: error?.message,
+            code: error?.code,
+            response: error?.response?.data,
+            status: error?.response?.status,
+            statusText: error?.response?.statusText,
+            backendUrl,
+            fullUrl,
+            requestUrl: error?.config?.url,
+            requestBaseURL: error?.config?.baseURL,
+        });
         throw error;
     }
 };
 export const getProducts = async (params = {}, forceReload = false) => {
     try {
+        const client = getClient();
         const requestParams = {
             album_id: params.albumId,
             q: params.query,
@@ -28,12 +70,12 @@ export const getProducts = async (params = {}, forceReload = false) => {
         }
         const { data } = await client.get('/products', {
             params: requestParams,
-            timeout: 60000, // 60 секунд таймаут для обогащения товаров
+            timeout: 30000, // 30 секунд - оптимизированный таймаут
         });
         return data.items ?? [];
     }
     catch (error) {
-        console.error('Error fetching products:', error);
+        logger.error('Error fetching products:', error);
         throw error;
     }
 };
@@ -44,13 +86,63 @@ export const getProducts = async (params = {}, forceReload = false) => {
  */
 export const getProductPhotos = async (productId) => {
     try {
+        const client = getClient();
         const { data } = await client.get(`/products/${productId}/photos`, {
-            timeout: 10000, // 10 секунд таймаут
+            timeout: 15000, // 15 секунд - достаточный таймаут для загрузки фотографий
         });
         return data.photos ?? [];
     }
     catch (error) {
-        console.error('Error fetching product photos:', error);
+        logger.error('Error fetching product photos:', error);
+        throw error;
+    }
+};
+/**
+ * Сохраняет данные пользователя на бэкенд
+ * @param userData - Данные пользователя из Telegram
+ * @returns Promise с результатом сохранения
+ */
+export const saveUser = async (userData) => {
+    try {
+        const client = getClient();
+        await client.post('/auth/user', userData, {
+            timeout: 10000, // 10 секунд - достаточный таймаут для сохранения
+        });
+        logger.debug('[API] User data saved successfully', { userId: userData.id });
+    }
+    catch (error) {
+        // Логируем ошибку, но не блокируем работу приложения
+        logger.warn('[API] Error saving user data:', {
+            error: error?.message,
+            status: error?.response?.status,
+            userId: userData.id,
+        });
+        // Не пробрасываем ошибку, чтобы не блокировать работу приложения
+    }
+};
+/**
+ * Получает список всех пользователей (только для администратора)
+ * @param adminUsername - Username администратора для проверки прав
+ * @returns Promise со списком пользователей
+ */
+export const getUsers = async (adminUsername) => {
+    try {
+        const client = getClient();
+        const { data } = await client.get('/auth/users', {
+            headers: {
+                'X-Admin-Username': adminUsername,
+            },
+            timeout: 15000,
+        });
+        logger.debug('[API] Users fetched successfully', { count: data.count });
+        return data;
+    }
+    catch (error) {
+        logger.error('[API] Error fetching users:', {
+            error: error?.message,
+            status: error?.response?.status,
+            adminUsername,
+        });
         throw error;
     }
 };

@@ -10,6 +10,6 @@ const CollectionCard = ({ collection, isActive, onClick }) => {
                 e.preventDefault();
                 onClick();
             }
-        }, children: [_jsxs("div", { className: "collection-card__image", children: [_jsx("img", { src: image, alt: collection.title }), collection.count !== undefined && (_jsxs("span", { className: "collection-card__count", children: [collection.count, " \u0442\u043E\u0432\u0430\u0440\u043E\u0432"] }))] }), _jsx("h3", { className: "collection-card__title", children: collection.title })] }));
+        }, children: [_jsxs("div", { className: "collection-card__image", children: [_jsx("img", { src: image, alt: collection.title, loading: "lazy", decoding: "async" }), collection.count !== undefined && (_jsxs("span", { className: "collection-card__count", children: [collection.count, " \u0442\u043E\u0432\u0430\u0440\u043E\u0432"] }))] }), _jsx("h3", { className: "collection-card__title", children: collection.title })] }));
 };
 export default CollectionCard;

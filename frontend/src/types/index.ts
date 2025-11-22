@@ -45,6 +45,21 @@ export type Product = {
   sizes?: string[];
 };
 
+export type User = {
+  id: number;
+  first_name: string;
+  last_name: string | null;
+  username: string | null;
+  language_code: string | null;
+  is_premium: boolean;
+  photo_url: string | null;
+  first_seen_at: string;
+  last_seen_at: string;
+  visit_count: number;
+  first_seen_readable: string;
+  last_seen_readable: string;
+};
+
 
 
 
