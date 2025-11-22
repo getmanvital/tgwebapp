@@ -6,7 +6,7 @@ import pino from 'pino';
 import productsRouter from './routes/products.js';
 import syncRouter from './routes/sync.js';
 import authRouter from './routes/auth.js';
-import { PHOTOS_DIR, db } from './database/schema.js';
+import { PHOTOS_DIR } from './database/schema.js';
 
 const app = express();
 
@@ -73,7 +73,7 @@ app.use('/sync', syncRouter);
 
 app.listen(PORT, () => {
   logger.info({ PORT }, 'Backend service started');
-  logger.info({ dbPath: db.name }, 'Database initialized');
+  logger.info('Database initialized');
   logger.info({ photosDir: PHOTOS_DIR }, 'Photos directory ready');
 });
 

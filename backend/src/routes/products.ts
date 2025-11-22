@@ -43,7 +43,7 @@ router.get('/collections', async (_req: Request, res: Response, next: NextFuncti
   try {
     // Если используется локальная БД, берем данные оттуда
     if (useLocalDB) {
-      const collections = collectionsQueries.getAll.all();
+      const collections = await collectionsQueries.getAll();
       const result = {
         count: collections.length,
         items: collections.map((c: any) => ({
@@ -231,9 +231,9 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       let products: any[];
 
       if (albumId) {
-        products = productsQueries.getByCollection.all(Number(albumId));
+        products = await productsQueries.getByCollection(Number(albumId));
       } else {
-        products = productsQueries.getAll.all();
+        products = await productsQueries.getAll();
       }
 
       // Применяем фильтры

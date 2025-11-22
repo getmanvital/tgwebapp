@@ -29,7 +29,7 @@ interface TelegramUser {
   photo_url?: string;
 }
 
-router.post('/user', (req: Request, res: Response) => {
+router.post('/user', async (req: Request, res: Response) => {
   try {
     const userData = req.body as TelegramUser;
 
@@ -44,11 +44,11 @@ router.post('/user', (req: Request, res: Response) => {
     const now = Date.now();
     
     // Проверяем, существует ли пользователь
-    const existingUser = usersQueries.getById.get(userData.id) as any;
+    const existingUser = await usersQueries.getById(userData.id);
 
     if (existingUser) {
       // Обновляем существующего пользователя
-      usersQueries.update.run(
+      await usersQueries.update(
         userData.first_name,
         userData.last_name || null,
         userData.username || null,
@@ -60,7 +60,7 @@ router.post('/user', (req: Request, res: Response) => {
       );
     } else {
       // Создаем нового пользователя
-      usersQueries.insert.run(
+      await usersQueries.insert(
         userData.id,
         userData.first_name,
         userData.last_name || null,
@@ -81,7 +81,7 @@ router.post('/user', (req: Request, res: Response) => {
   }
 });
 
-router.get('/users', (req: Request, res: Response) => {
+router.get('/users', async (req: Request, res: Response) => {
   try {
     // Проверка прав администратора
     // Express автоматически приводит заголовки к lowercase
@@ -95,8 +95,8 @@ router.get('/users', (req: Request, res: Response) => {
     }
     
     // Получаем общее количество пользователей для проверки
-    const totalCount = (usersQueries.count.get() as any).count;
-    const users = usersQueries.getAll.all() as any[];
+    const totalCount = await usersQueries.count();
+    const users = await usersQueries.getAll();
     
     logger.info({ 
       totalCount, 
@@ -131,7 +131,7 @@ router.get('/users', (req: Request, res: Response) => {
   }
 });
 
-router.get('/users/:id', (req: Request, res: Response) => {
+router.get('/users/:id', async (req: Request, res: Response) => {
   try {
     // Проверка прав администратора
     const adminUsername = req.headers['x-admin-username'] as string | undefined;
@@ -149,7 +149,7 @@ router.get('/users/:id', (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid user ID' });
     }
     
-    const user = usersQueries.getById.get(userId) as any;
+    const user = await usersQueries.getById(userId);
     
     if (!user) {
       return res.status(404).json({ error: 'User not found' });

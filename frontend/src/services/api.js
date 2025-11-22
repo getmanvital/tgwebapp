@@ -104,17 +104,39 @@ export const getProductPhotos = async (productId) => {
  */
 export const saveUser = async (userData) => {
     try {
+        if (!userData.id || !userData.first_name) {
+            logger.warn('[API] Cannot save user: missing id or first_name', {
+                hasId: !!userData.id,
+                hasFirstName: !!userData.first_name,
+                userId: userData.id,
+            });
+            return;
+        }
         const client = getClient();
-        await client.post('/auth/user', userData, {
+        const response = await client.post('/auth/user', userData, {
             timeout: 10000, // 10 секунд - достаточный таймаут для сохранения
+        });
+        logger.debug('[API] User data saved successfully', {
+            userId: userData.id,
+            username: userData.username,
+            responseStatus: response.status,
         });
     }
     catch (error) {
-        // Логируем только ошибки, не блокируем работу приложения
-        logger.warn('[API] Error saving user data:', {
+        // Логируем ошибки подробно для диагностики
+        logger.error('[API] Error saving user data:', {
             error: error?.message,
             status: error?.response?.status,
+            statusText: error?.response?.statusText,
+            responseData: error?.response?.data,
             userId: userData.id,
+            username: userData.username,
+            firstName: userData.first_name,
+            code: error?.code,
+            config: {
+                url: error?.config?.url,
+                method: error?.config?.method,
+            },
         });
         // Не пробрасываем ошибку, чтобы не блокировать работу приложения
     }

@@ -5,6 +5,7 @@ import { useTelegram } from './hooks/useTelegram';
 import { useTelegramTheme } from './hooks/useTelegramTheme';
 import { useTelegramUser } from './hooks/useTelegramUser';
 import { saveUser } from './services/api';
+import { logger } from './utils/logger';
 
 type Page = 'home' | 'users';
 
@@ -20,9 +21,16 @@ function App() {
   // Сохраняем данные пользователя при загрузке приложения
   useEffect(() => {
     if (user) {
+      logger.debug('[App] Attempting to save user', {
+        id: user.id,
+        username: user.username,
+        firstName: user.first_name,
+      });
       saveUser(user).catch(() => {
         // Ошибка уже обработана в saveUser
       });
+    } else {
+      logger.debug('[App] No user data available to save');
     }
   }, [user]);
 

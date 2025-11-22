@@ -41,11 +41,11 @@ export const clearDatabase = async (): Promise<void> => {
   console.log('Очистка базы данных...');
   
   // Удаляем все товары (каскадно удалятся из-за foreign key)
-  productsQueries.deleteAll.run();
+  await productsQueries.deleteAll();
   console.log('Товары удалены');
   
   // Удаляем все коллекции
-  collectionsQueries.deleteAll.run();
+  await collectionsQueries.deleteAll();
   console.log('Коллекции удалены');
   
   // Удаляем все фото
@@ -95,7 +95,7 @@ export const syncCatalog = async (): Promise<void> => {
     // Сохраняем коллекции в БД
     for (let i = 0; i < collections.items.length; i++) {
       const collection = collections.items[i];
-      const existing = collectionsQueries.getById.get(collection.id) as any;
+      const existing = await collectionsQueries.getById(collection.id);
       
       try {
         // Логируем структуру первой коллекции для отладки
@@ -137,25 +137,21 @@ export const syncCatalog = async (): Promise<void> => {
         }
         
         // Сохраняем порядок коллекций как в VK (индекс в массиве)
-        // Убеждаемся, что все параметры определены (7 параметров для 7 полей)
-        const params: any[] = [
-          Number(collection.id),           // id
-          String(collection.title || ''),  // title
-          photoUrl,                        // photo_url
-          Number(collection.count || 0),   // count
-          Number(i),                       // sort_order - порядок как в VK API
-          Number(now),                     // updated_at
-          Number(createdAt)                // created_at
-        ];
+        const collectionId = Number(collection.id);
+        const collectionTitle = String(collection.title || '');
+        const collectionCount = Number(collection.count || 0);
+        const sortOrder = Number(i);
         
-        if (params.length !== 7) {
-          console.error(`Wrong number of params: ${params.length}, expected 7`);
-          console.error('Params:', params);
-          throw new Error(`Wrong number of params: ${params.length}`);
-        }
-        
-        console.log(`Inserting collection ${collection.id} with ${params.length} params`);
-        collectionsQueries.insert.run(...params);
+        console.log(`Inserting collection ${collectionId} with title: ${collectionTitle}`);
+        await collectionsQueries.insert(
+          collectionId,
+          collectionTitle,
+          photoUrl,
+          collectionCount,
+          sortOrder,
+          Number(now),
+          Number(createdAt)
+        );
       } catch (error: any) {
         console.error(`Error inserting collection ${collection.id}:`, error.message);
         console.error('Collection data:', JSON.stringify(collection, null, 2));
@@ -200,7 +196,7 @@ export const syncCatalog = async (): Promise<void> => {
           try {
             const sizes = parseSizes(product.description || '');
             
-            productsQueries.insert.run(
+            await productsQueries.insert(
               product.id,
               collection.id,
               product.title,
@@ -297,7 +293,7 @@ export const syncCatalog = async (): Promise<void> => {
             if (!fullProduct) {
               console.warn(`Товар ${productId}: не удалось получить полную информацию через getById`);
               // Пытаемся использовать данные из БД (которые уже сохранены)
-              const dbProduct = productsQueries.getById.get(productId) as any;
+              const dbProduct = await productsQueries.getById(productId);
               if (dbProduct && dbProduct.thumb_photo_url) {
                 // Если есть хотя бы обложка в БД, загружаем её
                 try {
