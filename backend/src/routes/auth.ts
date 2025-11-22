@@ -94,7 +94,15 @@ router.get('/users', (req: Request, res: Response) => {
       });
     }
     
+    // Получаем общее количество пользователей для проверки
+    const totalCount = (usersQueries.count.get() as any).count;
     const users = usersQueries.getAll.all() as any[];
+    
+    logger.info({ 
+      totalCount, 
+      fetchedCount: users.length,
+      userIds: users.map(u => u.id)
+    }, 'Fetching all users from database');
     
     // Преобразуем timestamp в читаемые даты и форматируем данные
     const formattedUsers = users.map(user => ({
