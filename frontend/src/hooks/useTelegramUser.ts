@@ -11,28 +11,6 @@ export interface TelegramUser {
   photo_url?: string;
 }
 
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp: {
-        ready: () => void;
-        expand: () => void;
-        initDataUnsafe?: {
-          user?: {
-            id: number;
-            first_name: string;
-            last_name?: string;
-            username?: string;
-            language_code?: string;
-            is_premium?: boolean;
-            photo_url?: string;
-          };
-        };
-      };
-    };
-  }
-}
-
 export const useTelegramUser = (): TelegramUser | null => {
   const [user, setUser] = useState<TelegramUser | null>(null);
 
