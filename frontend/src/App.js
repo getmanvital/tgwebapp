@@ -16,20 +16,9 @@ function App() {
     // Сохраняем данные пользователя при загрузке приложения
     useEffect(() => {
         if (user) {
-            console.log('[App] Saving user data:', {
-                id: user.id,
-                username: user.username,
-                firstName: user.first_name
+            saveUser(user).catch(() => {
+                // Ошибка уже обработана в saveUser
             });
-            saveUser(user).then(() => {
-                console.log('[App] User data saved successfully');
-            }).catch((err) => {
-                // Ошибка уже обработана в saveUser, просто логируем
-                console.error('[App] Failed to save user data:', err);
-            });
-        }
-        else {
-            console.log('[App] No user data available to save');
         }
     }, [user]);
     useEffect(() => {
