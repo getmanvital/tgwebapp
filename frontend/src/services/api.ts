@@ -120,6 +120,37 @@ export const getProductPhotos = async (productId: number): Promise<string[]> => 
   }
 };
 
+/**
+ * Сохраняет данные пользователя на бэкенд
+ * @param userData - Данные пользователя из Telegram
+ * @returns Promise с результатом сохранения
+ */
+export const saveUser = async (userData: {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  language_code?: string;
+  is_premium?: boolean;
+  photo_url?: string;
+}): Promise<void> => {
+  try {
+    const client = getClient();
+    await client.post('/auth/user', userData, {
+      timeout: 10000, // 10 секунд - достаточный таймаут для сохранения
+    });
+    logger.debug('[API] User data saved successfully', { userId: userData.id });
+  } catch (error: any) {
+    // Логируем ошибку, но не блокируем работу приложения
+    logger.warn('[API] Error saving user data:', {
+      error: error?.message,
+      status: error?.response?.status,
+      userId: userData.id,
+    });
+    // Не пробрасываем ошибку, чтобы не блокировать работу приложения
+  }
+};
+
 
 
 

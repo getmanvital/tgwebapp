@@ -38,8 +38,8 @@ main {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  /* Учитываем безопасные зоны на мобильных */
-  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  /* Учитываем безопасные зоны на мобильных и высоту статуса авторизации */
+  padding-bottom: calc(72px + max(16px, env(safe-area-inset-bottom)));
 }
 
 header {
@@ -616,6 +616,84 @@ body.tg-theme-dark .skeleton__shimmer {
     transparent
   );
 }
+
+/* User Auth Status Styles */
+.user-auth-status {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--tg-theme-secondary-bg-color, #fff);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 12px 16px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 100;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+}
+
+body.tg-theme-dark .user-auth-status {
+  background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.1));
+  border-top-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.user-auth-status__content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+}
+
+.user-auth-status__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--tg-theme-button-color, #0f62fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-auth-status__avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-auth-status__avatar-initials {
+  color: var(--tg-theme-button-text-color, #fff);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.user-auth-status__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-auth-status__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tg-theme-text-color, #1b1b1f);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-auth-status__status {
+  font-size: 12px;
+  color: var(--tg-theme-hint-color, #878a99);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 
 
 

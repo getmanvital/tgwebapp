@@ -48,10 +48,25 @@ db.exec(`
     FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE CASCADE
   );
 
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY,
+    first_name TEXT NOT NULL,
+    last_name TEXT,
+    username TEXT,
+    language_code TEXT,
+    is_premium INTEGER DEFAULT 0,
+    photo_url TEXT,
+    first_seen_at INTEGER NOT NULL,
+    last_seen_at INTEGER NOT NULL,
+    visit_count INTEGER DEFAULT 1
+  );
+
   CREATE INDEX IF NOT EXISTS idx_products_collection_id ON products(collection_id);
   CREATE INDEX IF NOT EXISTS idx_products_title ON products(title);
   CREATE INDEX IF NOT EXISTS idx_collections_updated_at ON collections(updated_at);
   CREATE INDEX IF NOT EXISTS idx_products_updated_at ON products(updated_at);
+  CREATE INDEX IF NOT EXISTS idx_users_id ON users(id);
+  CREATE INDEX IF NOT EXISTS idx_users_last_seen_at ON users(last_seen_at);
 `);
 
 // Миграция: добавляем поле sort_order если его нет (для существующих БД)
@@ -146,6 +161,39 @@ export const productsQueries = {
   
   countByCollection: db.prepare(`
     SELECT COUNT(*) as count FROM products WHERE collection_id = ?
+  `),
+};
+
+// Подготовленные запросы для пользователей
+export const usersQueries = {
+  getById: db.prepare(`
+    SELECT * FROM users WHERE id = ?
+  `),
+  
+  insert: db.prepare(`
+    INSERT INTO users (id, first_name, last_name, username, language_code, is_premium, photo_url, first_seen_at, last_seen_at, visit_count)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+  `),
+  
+  update: db.prepare(`
+    UPDATE users SET
+      first_name = ?,
+      last_name = ?,
+      username = ?,
+      language_code = ?,
+      is_premium = ?,
+      photo_url = ?,
+      last_seen_at = ?,
+      visit_count = visit_count + 1
+    WHERE id = ?
+  `),
+  
+  getAll: db.prepare(`
+    SELECT * FROM users ORDER BY last_seen_at DESC
+  `),
+  
+  count: db.prepare(`
+    SELECT COUNT(*) as count FROM users
   `),
 };
 

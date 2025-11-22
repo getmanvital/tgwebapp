@@ -4,7 +4,9 @@ import CollectionCardSkeleton from '../components/CollectionCardSkeleton';
 import FiltersBar from '../components/FiltersBar';
 import ProductCard from '../components/ProductCard';
 import ProductCardSkeleton from '../components/ProductCardSkeleton';
+import UserAuthStatus from '../components/UserAuthStatus';
 import { getCollections, getProducts } from '../services/api';
+import { useTelegramUser } from '../hooks/useTelegramUser';
 import type { Collection, Product } from '../types';
 import { logger } from '../utils/logger';
 
@@ -15,6 +17,7 @@ const extractSizes = (items: Product[]): string[] => {
 };
 
 const HomePage = () => {
+  const user = useTelegramUser();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<string>();
   const [products, setProducts] = useState<Product[]>([]);
@@ -192,6 +195,7 @@ const HomePage = () => {
           )}
         </>
       )}
+      <UserAuthStatus user={user} />
     </main>
   );
 };

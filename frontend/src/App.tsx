@@ -2,13 +2,26 @@ import { useEffect, useState } from 'react';
 import HomePage from './pages/HomePage';
 import { useTelegram } from './hooks/useTelegram';
 import { useTelegramTheme } from './hooks/useTelegramTheme';
+import { useTelegramUser } from './hooks/useTelegramUser';
+import { saveUser } from './services/api';
 
 function App() {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const user = useTelegramUser();
   
   useTelegram();
   useTelegramTheme(); // Определяем и применяем тему Telegram
+
+  // Сохраняем данные пользователя при загрузке приложения
+  useEffect(() => {
+    if (user) {
+      saveUser(user).catch((err) => {
+        // Ошибка уже обработана в saveUser, просто логируем
+        console.warn('Failed to save user data:', err);
+      });
+    }
+  }, [user]);
 
   useEffect(() => {
     const isInTelegram = window.Telegram?.WebApp !== undefined;

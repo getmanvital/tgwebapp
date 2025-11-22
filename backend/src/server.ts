@@ -5,6 +5,7 @@ import pino from 'pino';
 
 import productsRouter from './routes/products.js';
 import syncRouter from './routes/sync.js';
+import authRouter from './routes/auth.js';
 import { PHOTOS_DIR, db } from './database/schema.js';
 
 const app = express();
@@ -60,6 +61,7 @@ app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: Date.now() });
 });
 
+app.use('/auth', authRouter);
 app.use('/products', productsRouter);
 app.use('/sync', syncRouter);
 
