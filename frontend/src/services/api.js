@@ -125,16 +125,22 @@ export const saveUser = async (userData) => {
  * @param adminUsername - Username администратора для проверки прав
  * @returns Promise со списком пользователей
  */
+// Функция нормализации username (убирает @ если есть)
+const normalizeUsername = (username) => {
+    return username.startsWith('@') ? username.slice(1) : username;
+};
 export const getUsers = async (adminUsername) => {
     try {
         if (!adminUsername) {
             throw new Error('Admin username is required');
         }
+        // Нормализуем username (убираем @ если есть)
+        const normalizedUsername = normalizeUsername(adminUsername);
         const client = getClient();
-        logger.debug('[API] Fetching users with admin username:', adminUsername);
+        logger.debug('[API] Fetching users with admin username:', { original: adminUsername, normalized: normalizedUsername });
         const { data } = await client.get('/auth/users', {
             headers: {
-                'X-Admin-Username': adminUsername,
+                'X-Admin-Username': normalizedUsername,
             },
             timeout: 15000,
         });

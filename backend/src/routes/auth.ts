@@ -7,9 +7,16 @@ const logger = pino();
 
 const ADMIN_USERNAME = 'getmanvit';
 
+// Функция нормализации username (убирает @ если есть)
+const normalizeUsername = (username: string | undefined | null): string | null => {
+  if (!username) return null;
+  return username.startsWith('@') ? username.slice(1) : username;
+};
+
 // Функция проверки администратора
 const isAdmin = (username: string | undefined | null): boolean => {
-  return username === ADMIN_USERNAME;
+  const normalized = normalizeUsername(username);
+  return normalized === ADMIN_USERNAME;
 };
 
 interface TelegramUser {
