@@ -105,28 +105,43 @@ router.get('/users', async (req: Request, res: Response) => {
     }, 'Fetching all users from database');
     
     // Преобразуем timestamp в читаемые даты и форматируем данные
-    const formattedUsers = users.map(user => ({
-      id: user.id,
-      first_name: user.first_name,
-      last_name: user.last_name || null,
-      username: user.username || null,
-      language_code: user.language_code || null,
-      is_premium: Boolean(user.is_premium),
-      photo_url: user.photo_url || null,
-      first_seen_at: new Date(user.first_seen_at).toISOString(),
-      last_seen_at: new Date(user.last_seen_at).toISOString(),
-      visit_count: user.visit_count,
-      // Добавляем человекочитаемые даты для удобства
-      first_seen_readable: new Date(user.first_seen_at).toLocaleString('ru-RU'),
-      last_seen_readable: new Date(user.last_seen_at).toLocaleString('ru-RU'),
-    }));
+    const formattedUsers = users.map(user => {
+      // PostgreSQL возвращает BIGINT как строку, нужно преобразовать в число
+      const firstSeenAt = typeof user.first_seen_at === 'string' 
+        ? parseInt(user.first_seen_at, 10) 
+        : Number(user.first_seen_at);
+      const lastSeenAt = typeof user.last_seen_at === 'string' 
+        ? parseInt(user.last_seen_at, 10) 
+        : Number(user.last_seen_at);
+      
+      return {
+        id: typeof user.id === 'string' ? parseInt(user.id, 10) : Number(user.id),
+        first_name: user.first_name,
+        last_name: user.last_name || null,
+        username: user.username || null,
+        language_code: user.language_code || null,
+        is_premium: Boolean(user.is_premium),
+        photo_url: user.photo_url || null,
+        first_seen_at: new Date(firstSeenAt).toISOString(),
+        last_seen_at: new Date(lastSeenAt).toISOString(),
+        visit_count: typeof user.visit_count === 'string' ? parseInt(user.visit_count, 10) : Number(user.visit_count),
+        // Добавляем человекочитаемые даты для удобства
+        first_seen_readable: new Date(firstSeenAt).toLocaleString('ru-RU'),
+        last_seen_readable: new Date(lastSeenAt).toLocaleString('ru-RU'),
+      };
+    });
     
     res.json({
       count: users.length,
       users: formattedUsers
     });
   } catch (error: any) {
-    logger.error({ error }, 'Error fetching users');
+    logger.error({ 
+      error: error?.message,
+      stack: error?.stack,
+      code: error?.code,
+      name: error?.name
+    }, 'Error fetching users');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -156,19 +171,27 @@ router.get('/users/:id', async (req: Request, res: Response) => {
     }
     
     // Форматируем данные пользователя
+    // PostgreSQL возвращает BIGINT как строку, нужно преобразовать в число
+    const firstSeenAt = typeof user.first_seen_at === 'string' 
+      ? parseInt(user.first_seen_at, 10) 
+      : Number(user.first_seen_at);
+    const lastSeenAt = typeof user.last_seen_at === 'string' 
+      ? parseInt(user.last_seen_at, 10) 
+      : Number(user.last_seen_at);
+    
     const formattedUser = {
-      id: user.id,
+      id: typeof user.id === 'string' ? parseInt(user.id, 10) : Number(user.id),
       first_name: user.first_name,
       last_name: user.last_name || null,
       username: user.username || null,
       language_code: user.language_code || null,
       is_premium: Boolean(user.is_premium),
       photo_url: user.photo_url || null,
-      first_seen_at: new Date(user.first_seen_at).toISOString(),
-      last_seen_at: new Date(user.last_seen_at).toISOString(),
-      visit_count: user.visit_count,
-      first_seen_readable: new Date(user.first_seen_at).toLocaleString('ru-RU'),
-      last_seen_readable: new Date(user.last_seen_at).toLocaleString('ru-RU'),
+      first_seen_at: new Date(firstSeenAt).toISOString(),
+      last_seen_at: new Date(lastSeenAt).toISOString(),
+      visit_count: typeof user.visit_count === 'string' ? parseInt(user.visit_count, 10) : Number(user.visit_count),
+      first_seen_readable: new Date(firstSeenAt).toLocaleString('ru-RU'),
+      last_seen_readable: new Date(lastSeenAt).toLocaleString('ru-RU'),
     };
     
     res.json(formattedUser);
