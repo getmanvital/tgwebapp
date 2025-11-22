@@ -104,18 +104,34 @@ export const getProductPhotos = async (productId) => {
  */
 export const saveUser = async (userData) => {
     try {
+        logger.debug('[API] Attempting to save user data', {
+            userId: userData.id,
+            username: userData.username,
+            firstName: userData.first_name
+        });
         const client = getClient();
-        await client.post('/auth/user', userData, {
+        const response = await client.post('/auth/user', userData, {
             timeout: 10000, // 10 секунд - достаточный таймаут для сохранения
         });
-        logger.debug('[API] User data saved successfully', { userId: userData.id });
+        logger.debug('[API] User data saved successfully', {
+            userId: userData.id,
+            response: response.data
+        });
     }
     catch (error) {
-        // Логируем ошибку, но не блокируем работу приложения
-        logger.warn('[API] Error saving user data:', {
+        // Логируем ошибку подробно, но не блокируем работу приложения
+        logger.error('[API] Error saving user data:', {
             error: error?.message,
             status: error?.response?.status,
+            statusText: error?.response?.statusText,
+            responseData: error?.response?.data,
             userId: userData.id,
+            username: userData.username,
+            config: {
+                url: error?.config?.url,
+                method: error?.config?.method,
+                data: error?.config?.data,
+            },
         });
         // Не пробрасываем ошибку, чтобы не блокировать работу приложения
     }

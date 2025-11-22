@@ -32,6 +32,8 @@ interface TelegramUser {
 router.post('/user', (req: Request, res: Response) => {
   try {
     const userData = req.body as TelegramUser;
+    
+    logger.debug({ userData, body: req.body }, 'Received user data to save');
 
     // Валидация обязательных полей
     if (!userData.id || !userData.first_name) {
@@ -45,6 +47,12 @@ router.post('/user', (req: Request, res: Response) => {
     
     // Проверяем, существует ли пользователь
     const existingUser = usersQueries.getById.get(userData.id) as any;
+    
+    logger.debug({ 
+      userId: userData.id, 
+      exists: !!existingUser,
+      existingUser 
+    }, 'Checking if user exists');
 
     if (existingUser) {
       // Обновляем существующего пользователя
@@ -58,7 +66,11 @@ router.post('/user', (req: Request, res: Response) => {
         now,
         userData.id
       );
-      logger.info({ userId: userData.id }, 'User updated');
+      logger.info({ 
+        userId: userData.id, 
+        username: userData.username,
+        visitCount: existingUser.visit_count + 1
+      }, 'User updated');
     } else {
       // Создаем нового пользователя
       usersQueries.insert.run(
@@ -72,12 +84,16 @@ router.post('/user', (req: Request, res: Response) => {
         now, // first_seen_at
         now  // last_seen_at
       );
-      logger.info({ userId: userData.id }, 'New user created');
+      logger.info({ 
+        userId: userData.id, 
+        username: userData.username,
+        firstName: userData.first_name
+      }, 'New user created');
     }
 
     res.json({ success: true });
   } catch (error: any) {
-    logger.error({ error }, 'Error saving user data');
+    logger.error({ error, stack: error?.stack }, 'Error saving user data');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
