@@ -163,7 +163,13 @@ export interface UsersResponse {
  */
 export const getUsers = async (adminUsername: string): Promise<UsersResponse> => {
   try {
+    if (!adminUsername) {
+      throw new Error('Admin username is required');
+    }
+    
     const client = getClient();
+    logger.debug('[API] Fetching users with admin username:', adminUsername);
+    
     const { data } = await client.get<UsersResponse>('/auth/users', {
       headers: {
         'X-Admin-Username': adminUsername,
@@ -177,7 +183,13 @@ export const getUsers = async (adminUsername: string): Promise<UsersResponse> =>
     logger.error('[API] Error fetching users:', {
       error: error?.message,
       status: error?.response?.status,
+      statusText: error?.response?.statusText,
+      responseData: error?.response?.data,
       adminUsername,
+      config: {
+        url: error?.config?.url,
+        headers: error?.config?.headers,
+      },
     });
     throw error;
   }

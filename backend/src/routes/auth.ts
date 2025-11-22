@@ -78,6 +78,7 @@ router.post('/user', (req: Request, res: Response) => {
 router.get('/users', (req: Request, res: Response) => {
   try {
     // Проверка прав администратора
+    // Express автоматически приводит заголовки к lowercase
     const adminUsername = req.headers['x-admin-username'] as string | undefined;
     
     if (!isAdmin(adminUsername)) {

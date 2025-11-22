@@ -28,12 +28,25 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
         setUsers(response.users);
         logger.debug('Users loaded', { count: response.count });
       } catch (err: any) {
-        logger.error('Error loading users:', err);
+        logger.error('Error loading users:', {
+          error: err,
+          message: err?.message,
+          status: err?.response?.status,
+          statusText: err?.response?.statusText,
+          data: err?.response?.data,
+          username: user?.username,
+        });
         
         if (err?.response?.status === 403) {
           setError('Доступ запрещен. У вас нет прав администратора.');
+        } else if (err?.response?.status === 500) {
+          setError('Ошибка сервера. Попробуйте позже.');
+        } else if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
+          setError('Превышено время ожидания. Проверьте подключение к интернету.');
+        } else if (err?.message?.includes('Network Error')) {
+          setError('Ошибка сети. Проверьте подключение к интернету.');
         } else {
-          setError('Ошибка загрузки пользователей. Попробуйте позже.');
+          setError(`Ошибка загрузки пользователей: ${err?.response?.data?.error || err?.message || 'Неизвестная ошибка'}`);
         }
       } finally {
         setLoading(false);

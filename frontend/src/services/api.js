@@ -127,7 +127,11 @@ export const saveUser = async (userData) => {
  */
 export const getUsers = async (adminUsername) => {
     try {
+        if (!adminUsername) {
+            throw new Error('Admin username is required');
+        }
         const client = getClient();
+        logger.debug('[API] Fetching users with admin username:', adminUsername);
         const { data } = await client.get('/auth/users', {
             headers: {
                 'X-Admin-Username': adminUsername,
@@ -141,7 +145,13 @@ export const getUsers = async (adminUsername) => {
         logger.error('[API] Error fetching users:', {
             error: error?.message,
             status: error?.response?.status,
+            statusText: error?.response?.statusText,
+            responseData: error?.response?.data,
             adminUsername,
+            config: {
+                url: error?.config?.url,
+                headers: error?.config?.headers,
+            },
         });
         throw error;
     }

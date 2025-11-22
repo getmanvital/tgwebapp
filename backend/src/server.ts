@@ -40,12 +40,18 @@ const PORT = Number(process.env.PORT) || 4000;
 
 
 app.use(express.json());
-app.use((_req: Request, res: Response, next: NextFunction) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Admin-Username');
   // Включаем кэширование на 5 минут для ускорения
   res.setHeader('Cache-Control', 'public, max-age=300');
+  
+  // Обработка preflight запросов
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
   next();
 });
 
