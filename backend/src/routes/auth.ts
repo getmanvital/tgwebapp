@@ -68,5 +68,73 @@ router.post('/user', (req: Request, res: Response) => {
   }
 });
 
+router.get('/users', (req: Request, res: Response) => {
+  try {
+    const users = usersQueries.getAll.all() as any[];
+    
+    // Преобразуем timestamp в читаемые даты и форматируем данные
+    const formattedUsers = users.map(user => ({
+      id: user.id,
+      first_name: user.first_name,
+      last_name: user.last_name || null,
+      username: user.username || null,
+      language_code: user.language_code || null,
+      is_premium: Boolean(user.is_premium),
+      photo_url: user.photo_url || null,
+      first_seen_at: new Date(user.first_seen_at).toISOString(),
+      last_seen_at: new Date(user.last_seen_at).toISOString(),
+      visit_count: user.visit_count,
+      // Добавляем человекочитаемые даты для удобства
+      first_seen_readable: new Date(user.first_seen_at).toLocaleString('ru-RU'),
+      last_seen_readable: new Date(user.last_seen_at).toLocaleString('ru-RU'),
+    }));
+    
+    res.json({
+      count: users.length,
+      users: formattedUsers
+    });
+  } catch (error: any) {
+    logger.error({ error }, 'Error fetching users');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/users/:id', (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.id, 10);
+    
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+    
+    const user = usersQueries.getById.get(userId) as any;
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Форматируем данные пользователя
+    const formattedUser = {
+      id: user.id,
+      first_name: user.first_name,
+      last_name: user.last_name || null,
+      username: user.username || null,
+      language_code: user.language_code || null,
+      is_premium: Boolean(user.is_premium),
+      photo_url: user.photo_url || null,
+      first_seen_at: new Date(user.first_seen_at).toISOString(),
+      last_seen_at: new Date(user.last_seen_at).toISOString(),
+      visit_count: user.visit_count,
+      first_seen_readable: new Date(user.first_seen_at).toLocaleString('ru-RU'),
+      last_seen_readable: new Date(user.last_seen_at).toLocaleString('ru-RU'),
+    };
+    
+    res.json(formattedUser);
+  } catch (error: any) {
+    logger.error({ error }, 'Error fetching user');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;
 
