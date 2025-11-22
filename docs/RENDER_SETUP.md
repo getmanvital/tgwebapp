@@ -77,3 +77,4 @@ VK_ACCESS_TOKEN=your_token_here
 VK_GROUP_ID=your_group_id
 ```
 
+

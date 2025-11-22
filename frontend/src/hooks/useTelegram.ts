@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { logger } from '../utils/logger';
 
 export interface TelegramThemeParams {
   bg_color?: string;
@@ -35,7 +36,7 @@ export const useTelegram = () => {
     // Функция инициализации Telegram WebApp
     const initTelegram = () => {
       if (!window.Telegram?.WebApp) {
-        console.warn('Telegram WebApp SDK not found. Running in browser mode.');
+        logger.warn('Telegram WebApp SDK not found. Running in browser mode.');
         return;
       }
 

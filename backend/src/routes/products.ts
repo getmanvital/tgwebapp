@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import type { ParsedQs } from 'qs';
 
@@ -11,8 +12,32 @@ const router = Router();
 const useLocalDB = process.env.USE_LOCAL_DB === 'true';
 
 // TTL для кэша (в миллисекундах)
-const COLLECTIONS_CACHE_TTL = 10 * 60 * 1000; // 10 минут
-const PRODUCTS_CACHE_TTL = 5 * 60 * 1000; // 5 минут
+const COLLECTIONS_CACHE_TTL = 60 * 60 * 1000; // 60 минут (коллекции меняются редко)
+const PRODUCTS_CACHE_TTL = 30 * 60 * 1000; // 30 минут
+
+/**
+ * Вычисляет ETag для данных
+ */
+const computeETag = (data: any): string => {
+  const json = JSON.stringify(data);
+  return createHash('md5').update(json).digest('hex');
+};
+
+/**
+ * Проверяет If-None-Match заголовок и отправляет 304, если данные не изменились
+ */
+const checkETag = (req: Request, res: Response, data: any): boolean => {
+  const etag = computeETag(data);
+  res.setHeader('ETag', `"${etag}"`);
+  
+  const ifNoneMatch = req.headers['if-none-match'];
+  if (ifNoneMatch === `"${etag}"` || ifNoneMatch === etag) {
+    res.status(304).end();
+    return true; // Данные не изменились, ответ отправлен
+  }
+  
+  return false; // Данные изменились, нужно отправить новые данные
+};
 
 router.get('/collections', async (_req: Request, res: Response, next: NextFunction) => {
   try {
@@ -42,17 +67,25 @@ router.get('/collections', async (_req: Request, res: Response, next: NextFuncti
 
     // Проверяем кэш
     const cacheKey = 'collections';
-    const cached = cache.get(cacheKey);
-    if (cached) {
-      console.log('Returning collections from cache');
-      return res.json(cached);
+    let collections = cache.get(cacheKey);
+    
+    if (collections) {
+      // Проверяем ETag - если данные не изменились, отправляем 304
+      if (checkETag(_req, res, collections)) {
+        return; // 304 уже отправлен
+      }
+      // Данные изменились, отправляем новые
+      return res.json(collections);
     }
 
-    const collections = await fetchCollections();
+    // Загружаем коллекции из VK
+    collections = await fetchCollections();
     
     // Сохраняем в кэш
     cache.set(cacheKey, collections, COLLECTIONS_CACHE_TTL);
     
+    // Устанавливаем ETag и отправляем данные
+    checkETag(_req, res, collections);
     res.json(collections);
   } catch (error) {
     next(error);
@@ -86,8 +119,13 @@ router.get('/:id/photos', async (req: Request, res: Response, next: NextFunction
     const cacheKey = `product:${productId}:photos`;
     const cached = cache.get<string[]>(cacheKey);
     if (cached) {
-      console.log(`Returning photos from cache for product ${productId}`);
-      return res.json({ photos: cached });
+      const photosResponse = { photos: cached };
+      // Проверяем ETag - если данные не изменились, отправляем 304
+      if (checkETag(req, res, photosResponse)) {
+        return; // 304 уже отправлен
+      }
+      // Данные изменились, отправляем новые
+      return res.json(photosResponse);
     }
 
     // Получаем полную информацию о товаре
@@ -172,10 +210,13 @@ router.get('/:id/photos', async (req: Request, res: Response, next: NextFunction
       }
     }
 
-    // Сохраняем в кэш на 5 минут
-    cache.set(cacheKey, photos, 5 * 60 * 1000);
+    // Сохраняем в кэш на 30 минут
+    cache.set(cacheKey, photos, PRODUCTS_CACHE_TTL);
 
-    res.json({ photos });
+    // Устанавливаем ETag и отправляем данные
+    const photosResponse = { photos };
+    checkETag(req, res, photosResponse);
+    res.json(photosResponse);
   } catch (error) {
     next(error);
   }
@@ -302,7 +343,11 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     if (!_t) {
       const cached = cache.get(cacheKey);
       if (cached) {
-        console.log(`Returning products from cache for key: ${cacheKey}`);
+        // Проверяем ETag - если данные не изменились, отправляем 304
+        if (checkETag(req, res, cached)) {
+          return; // 304 уже отправлен
+        }
+        // Данные изменились, отправляем новые
         return res.json(cached);
       }
     }
@@ -409,6 +454,8 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       cache.set(cacheKey, response, PRODUCTS_CACHE_TTL);
     }
 
+    // Устанавливаем ETag и отправляем данные
+    checkETag(req, res, response);
     res.json(response);
   } catch (error) {
     next(error);

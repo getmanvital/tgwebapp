@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import CollectionCard from '../components/CollectionCard';
+import CollectionCardSkeleton from '../components/CollectionCardSkeleton';
 import FiltersBar from '../components/FiltersBar';
 import ProductCard from '../components/ProductCard';
+import ProductCardSkeleton from '../components/ProductCardSkeleton';
 import { getCollections, getProducts } from '../services/api';
 import type { Collection, Product } from '../types';
+import { logger } from '../utils/logger';
 
 const extractSizes = (items: Product[]): string[] => {
   const set = new Set<string>();
@@ -43,7 +46,7 @@ const HomePage = () => {
         }
       })
       .catch((err) => {
-        console.error('Error loading collections:', err);
+        logger.error('Error loading collections:', err);
         const errorMessage = err?.response?.status 
           ? `Ошибка ${err.response.status}: ${err.response.statusText || 'Не удалось подключиться к серверу'}`
           : err?.message || 'Не удалось загрузить подборки';
@@ -130,22 +133,31 @@ const HomePage = () => {
 
       {!selectedCollection ? (
         <>
-          {loading && <p>Загрузка коллекций...</p>}
           {error && <p className="error">{error}</p>}
-          {!loading && !error && collections.length === 0 && (
-            <p>Коллекции не найдены</p>
-          )}
-          {!loading && collections.length > 0 && (
+          {loading ? (
             <div className="collections-grid">
-              {collections.map((collection) => (
-                <CollectionCard
-                  key={collection.id}
-                  collection={collection}
-                  isActive={false}
-                  onClick={() => setSelectedCollection(collection.id.toString())}
-                />
+              {Array.from({ length: 6 }).map((_, index) => (
+                <CollectionCardSkeleton key={index} />
               ))}
             </div>
+          ) : (
+            <>
+              {collections.length === 0 && !error && (
+                <p>Коллекции не найдены</p>
+              )}
+              {collections.length > 0 && (
+                <div className="collections-grid">
+                  {collections.map((collection) => (
+                    <CollectionCard
+                      key={collection.id}
+                      collection={collection}
+                      isActive={false}
+                      onClick={() => setSelectedCollection(collection.id.toString())}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </>
       ) : (
@@ -158,16 +170,26 @@ const HomePage = () => {
             onSizeChange={setSize}
           />
 
-          {loading && <p>Загрузка...</p>}
           {error && <p className="error">{error}</p>}
 
-          {!loading && !products.length && <p>Товары не найдены</p>}
-
-          <section className="products-grid">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} onContact={handleContact} />
-            ))}
-          </section>
+          {loading ? (
+            <section className="products-grid">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <ProductCardSkeleton key={index} />
+              ))}
+            </section>
+          ) : (
+            <>
+              {!products.length && !error && <p>Товары не найдены</p>}
+              {products.length > 0 && (
+                <section className="products-grid">
+                  {products.map((product) => (
+                    <ProductCard key={product.id} product={product} onContact={handleContact} />
+                  ))}
+                </section>
+              )}
+            </>
+          )}
         </>
       )}
     </main>

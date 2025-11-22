@@ -3,6 +3,7 @@ import PhotoGallery from './PhotoGallery';
 import type { Product } from '../types';
 import { getProductPhotos } from '../services/api';
 import { getBackendUrl } from '../utils/backendUrl';
+import { logger } from '../utils/logger';
 
 type Props = {
   product: Product;
@@ -167,7 +168,7 @@ const ProductCard = ({ product, onContact }: Props) => {
           setFullPhotos([thumbPhoto]);
         }
       } catch (error) {
-        console.error('Error loading product photos:', error);
+        logger.error('Error loading product photos:', error);
         // Если не удалось загрузить, используем только обложку
         setFullPhotos([thumbPhoto]);
       } finally {
@@ -185,7 +186,7 @@ const ProductCard = ({ product, onContact }: Props) => {
           }`}
           onClick={handleImageClick}
         >
-          <img src={thumbPhoto} alt={product.title} loading="lazy" />
+          <img src={thumbPhoto} alt={product.title} loading="lazy" decoding="async" />
           {hasMultiplePhotos && (
             <div className="product-card__photo-count">
               фото

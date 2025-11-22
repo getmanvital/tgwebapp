@@ -34,7 +34,7 @@ class SimpleCache {
   /**
    * Сохранить данные в кэш
    */
-  set<T>(key: string, data: T, ttl: number = 5 * 60 * 1000): void {
+  set<T>(key: string, data: T, ttl: number = 30 * 60 * 1000): void {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
@@ -72,12 +72,13 @@ class SimpleCache {
 // Создаем глобальный экземпляр кэша
 export const cache = new SimpleCache();
 
-// Очищаем устаревшие записи каждые 5 минут
+// Очищаем устаревшие записи каждые 15 минут
 if (typeof setInterval !== 'undefined') {
   setInterval(() => {
     cache.cleanup();
-  }, 5 * 60 * 1000);
+  }, 15 * 60 * 1000);
 }
+
 
 
 

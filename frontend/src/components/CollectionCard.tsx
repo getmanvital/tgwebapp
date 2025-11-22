@@ -28,7 +28,7 @@ const CollectionCard = ({ collection, isActive, onClick }: Props) => {
       }}
     >
       <div className="collection-card__image">
-        <img src={image} alt={collection.title} />
+        <img src={image} alt={collection.title} loading="lazy" decoding="async" />
         {collection.count !== undefined && (
           <span className="collection-card__count">{collection.count} товаров</span>
         )}
@@ -39,6 +39,7 @@ const CollectionCard = ({ collection, isActive, onClick }: Props) => {
 };
 
 export default CollectionCard;
+
 
 
 

@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import compression from 'compression';
 import express, { type Request, type Response, type NextFunction } from 'express';
 import pino from 'pino';
 
@@ -7,6 +8,20 @@ import syncRouter from './routes/sync.js';
 import { PHOTOS_DIR, db } from './database/schema.js';
 
 const app = express();
+
+// Компрессия ответов (gzip/brotli) для уменьшения размера передаваемых данных
+app.use(compression({
+  filter: (req: Request, res: Response) => {
+    // Сжимаем все ответы кроме изображений и других бинарных файлов
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    // Используем compression filter по умолчанию
+    return compression.filter(req, res);
+  },
+  level: 6, // Уровень сжатия (1-9, 6 - оптимальный баланс)
+  threshold: 1024, // Минимальный размер для сжатия (1KB)
+}));
 const logger = pino({
   level: 'info',
   ...(process.env.NODE_ENV === 'development' ? {
@@ -33,9 +48,12 @@ app.use((_req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// Статическая раздача фото
+// Статическая раздача фото с оптимизированными заголовками кэширования
 app.use('/photos', express.static(PHOTOS_DIR, {
   maxAge: '1y', // Кэшируем фото на год
+  etag: true, // Включаем ETag для условных запросов
+  lastModified: true, // Включаем Last-Modified заголовок
+  immutable: true, // Помечаем как неизменяемые ресурсы
 }));
 
 app.get('/health', (_req: Request, res: Response) => {

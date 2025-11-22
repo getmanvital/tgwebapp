@@ -1,13 +1,14 @@
 import axios from 'axios';
 import type { Collection, Product } from '../types';
 import { getBackendUrl } from '../utils/backendUrl';
+import { logger } from '../utils/logger';
 
 // Создаем функцию для получения клиента с актуальным baseURL
 const getClient = () => {
   const baseURL = getBackendUrl();
-  console.log('[API] Creating axios client with baseURL:', baseURL);
-  console.log('[API] VITE_BACKEND_URL from env:', import.meta.env.VITE_BACKEND_URL);
-  console.log('[API] import.meta.env:', {
+  logger.debug('[API] Creating axios client with baseURL:', baseURL);
+  logger.debug('[API] VITE_BACKEND_URL from env:', import.meta.env.VITE_BACKEND_URL);
+  logger.debug('[API] import.meta.env:', {
     MODE: import.meta.env.MODE,
     DEV: import.meta.env.DEV,
     PROD: import.meta.env.PROD,
@@ -16,7 +17,7 @@ const getClient = () => {
   
   return axios.create({
     baseURL,
-    timeout: 30000,
+    timeout: 30000, // 30 секунд - достаточный таймаут для большинства запросов
   });
 };
 
@@ -28,19 +29,19 @@ export const getCollections = async (forceReload = false): Promise<Collection[]>
     const client = getClient();
     const backendUrl = getBackendUrl();
     const fullUrl = `${backendUrl}/products/collections`;
-    console.log('[API] Fetching collections from:', fullUrl);
-    console.log('[API] Request params:', params);
+    logger.debug('[API] Fetching collections from:', fullUrl);
+    logger.debug('[API] Request params:', params);
     
     const { data } = await client.get('/products/collections', { params });
     
-    console.log('Collections response:', data);
+    logger.debug('Collections response:', data);
     
     if (!data || !Array.isArray(data.items)) {
-      console.warn('Unexpected response format:', data);
+      logger.warn('Unexpected response format:', data);
       return [];
     }
     
-    console.log('[API] Collections response received:', {
+    logger.debug('[API] Collections response received:', {
       count: data?.count,
       itemsLength: data?.items?.length,
       data,
@@ -49,7 +50,7 @@ export const getCollections = async (forceReload = false): Promise<Collection[]>
   } catch (error: any) {
     const backendUrl = getBackendUrl();
     const fullUrl = `${backendUrl}/products/collections`;
-    console.error('[API] Error fetching collections:', {
+    logger.error('[API] Error fetching collections:', {
       error,
       message: error?.message,
       code: error?.code,
@@ -90,12 +91,12 @@ export const getProducts = async (
 
     const { data } = await client.get('/products', {
       params: requestParams,
-      timeout: 60000, // 60 секунд таймаут для обогащения товаров
+      timeout: 30000, // 30 секунд - оптимизированный таймаут
     });
 
     return data.items ?? [];
   } catch (error: any) {
-    console.error('Error fetching products:', error);
+    logger.error('Error fetching products:', error);
     throw error;
   }
 };
@@ -109,12 +110,12 @@ export const getProductPhotos = async (productId: number): Promise<string[]> => 
   try {
     const client = getClient();
     const { data } = await client.get(`/products/${productId}/photos`, {
-      timeout: 10000, // 10 секунд таймаут
+      timeout: 15000, // 15 секунд - достаточный таймаут для загрузки фотографий
     });
 
     return data.photos ?? [];
   } catch (error: any) {
-    console.error('Error fetching product photos:', error);
+    logger.error('Error fetching product photos:', error);
     throw error;
   }
 };
