@@ -159,15 +159,25 @@ export const getUsers = async (adminUsername) => {
         const normalizedUsername = normalizeUsername(adminUsername);
         const client = getClient();
         logger.debug('[API] Fetching users with admin username:', { original: adminUsername, normalized: normalizedUsername });
+        logger.debug('[API] Making request to /auth/users', {
+            normalizedUsername,
+            headers: {
+                'X-Admin-Username': normalizedUsername,
+            },
+        });
         const { data } = await client.get('/auth/users', {
             headers: {
                 'X-Admin-Username': normalizedUsername,
             },
             timeout: 15000,
         });
-        logger.debug('[API] Users fetched successfully', {
+        logger.info('[API] Users fetched successfully', {
             count: data.count,
-            totalCount: data.totalCount
+            totalCount: data.totalCount,
+            usersLength: data.users?.length,
+            firstUserId: data.users?.[0]?.id,
+            allUserIds: data.users?.map(u => u.id),
+            responseData: data,
         });
         return data;
     }

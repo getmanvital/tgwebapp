@@ -252,10 +252,16 @@ export const usersQueries = {
     firstSeenAt: number,
     lastSeenAt: number
   ): Promise<void> => {
-    await pool.query(`
+    const result = await pool.query(`
       INSERT INTO users (id, first_name, last_name, username, language_code, is_premium, photo_url, first_seen_at, last_seen_at, visit_count)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 1)
+      RETURNING id
     `, [id, firstName, lastName, username, languageCode, isPremium, photoUrl, firstSeenAt, lastSeenAt]);
+    
+    // Проверяем, что запись действительно создана
+    if (!result.rows || result.rows.length === 0) {
+      throw new Error(`Failed to insert user ${id}: no rows returned`);
+    }
   },
   
   update: async (

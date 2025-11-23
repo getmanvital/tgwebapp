@@ -148,8 +148,21 @@ router.get('/users', async (req: Request, res: Response) => {
     }
     
     // Получаем общее количество пользователей для проверки
+    logger.debug({ adminUsername }, 'Counting users in database');
     const totalCount = await usersQueries.count();
+    logger.debug({ totalCount }, 'User count retrieved');
+    
+    logger.debug({ adminUsername }, 'Fetching all users from database');
     const users = await usersQueries.getAll();
+    logger.debug({ 
+      rawUsersCount: users.length,
+      rawUsers: users.map(u => ({
+        id: u.id,
+        username: u.username,
+        first_name: u.first_name,
+        idType: typeof u.id,
+      })),
+    }, 'Raw users from database');
     
     logger.info({ 
       totalCount, 
@@ -185,11 +198,24 @@ router.get('/users', async (req: Request, res: Response) => {
       };
     });
     
-    res.json({
+    logger.debug({
+      formattedUsersCount: formattedUsers.length,
+      formattedUserIds: formattedUsers.map(u => u.id),
+    }, 'Formatted users ready to send');
+    
+    const response = {
       count: users.length,
       totalCount: totalCount, // Общее количество пользователей в базе
       users: formattedUsers
-    });
+    };
+    
+    logger.info({
+      responseCount: response.count,
+      responseTotalCount: response.totalCount,
+      responseUsersLength: response.users.length,
+    }, 'Sending users response');
+    
+    res.json(response);
   } catch (error: any) {
     logger.error({ 
       error: error?.message,
