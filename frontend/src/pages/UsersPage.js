@@ -1,5 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import UsersList from '../components/UsersList';
 import { getUsers, deleteAllUsers } from '../services/api';
 import { useTelegramUser } from '../hooks/useTelegramUser';
@@ -13,54 +13,67 @@ const UsersPage = ({ onBack }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [deleting, setDeleting] = useState(false);
-    useEffect(() => {
+    const [refreshKey, setRefreshKey] = useState(0);
+    const fetchUsers = useCallback(async () => {
         if (!isAdmin || !user?.username) {
             setError('Доступ запрещен. Только администратор может просматривать пользователей.');
             return;
         }
-        const fetchUsers = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const response = await getUsers(user.username);
-                setUsers(response.users);
-                setTotalCount(response.totalCount ?? response.count);
-                logger.debug('Users loaded', {
-                    count: response.count,
-                    totalCount: response.totalCount
-                });
+        setLoading(true);
+        setError(null);
+        logger.info('[UsersPage] Fetching users', {
+            isAdmin,
+            username: user.username,
+            refreshKey,
+        });
+        try {
+            const response = await getUsers(user.username);
+            logger.info('[UsersPage] Users received', {
+                count: response.count,
+                totalCount: response.totalCount,
+                usersLength: response.users?.length,
+                firstUserId: response.users?.[0]?.id,
+            });
+            setUsers(response.users || []);
+            setTotalCount(response.totalCount ?? response.count ?? 0);
+            if (!response.users || response.users.length === 0) {
+                logger.warn('[UsersPage] No users in response', { response });
             }
-            catch (err) {
-                logger.error('Error loading users:', {
-                    error: err,
-                    message: err?.message,
-                    status: err?.response?.status,
-                    statusText: err?.response?.statusText,
-                    data: err?.response?.data,
-                    username: user?.username,
-                });
-                if (err?.response?.status === 403) {
-                    setError('Доступ запрещен. У вас нет прав администратора.');
-                }
-                else if (err?.response?.status === 500) {
-                    setError('Ошибка сервера. Попробуйте позже.');
-                }
-                else if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
-                    setError('Превышено время ожидания. Проверьте подключение к интернету.');
-                }
-                else if (err?.message?.includes('Network Error')) {
-                    setError('Ошибка сети. Проверьте подключение к интернету.');
-                }
-                else {
-                    setError(`Ошибка загрузки пользователей: ${err?.response?.data?.error || err?.message || 'Неизвестная ошибка'}`);
-                }
+        }
+        catch (err) {
+            logger.error('[UsersPage] Error loading users:', {
+                error: err,
+                message: err?.message,
+                status: err?.response?.status,
+                statusText: err?.response?.statusText,
+                data: err?.response?.data,
+                username: user?.username,
+                responseHeaders: err?.response?.headers,
+                requestHeaders: err?.config?.headers,
+            });
+            if (err?.response?.status === 403) {
+                setError('Доступ запрещен. У вас нет прав администратора.');
             }
-            finally {
-                setLoading(false);
+            else if (err?.response?.status === 500) {
+                setError('Ошибка сервера. Попробуйте позже.');
             }
-        };
+            else if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
+                setError('Превышено время ожидания. Проверьте подключение к интернету.');
+            }
+            else if (err?.message?.includes('Network Error')) {
+                setError('Ошибка сети. Проверьте подключение к интернету.');
+            }
+            else {
+                setError(`Ошибка загрузки пользователей: ${err?.response?.data?.error || err?.message || 'Неизвестная ошибка'}`);
+            }
+        }
+        finally {
+            setLoading(false);
+        }
+    }, [isAdmin, user?.username, refreshKey]);
+    useEffect(() => {
         fetchUsers();
-    }, [isAdmin, user?.username]);
+    }, [fetchUsers]);
     const handleDeleteAllUsers = async () => {
         if (!user?.username) {
             setError('Не удалось определить пользователя');
@@ -78,6 +91,7 @@ const UsersPage = ({ onBack }) => {
             // Обновляем список пользователей после удаления
             setUsers([]);
             setTotalCount(0);
+            setRefreshKey(prev => prev + 1); // Принудительно обновляем список
             // Показываем сообщение об успехе
             alert(`База данных очищена. Удалено пользователей: ${result.deletedCount}`);
         }
@@ -106,17 +120,31 @@ const UsersPage = ({ onBack }) => {
                                     fontWeight: 'normal',
                                     color: 'var(--tg-theme-hint-color, #999)',
                                     marginLeft: '8px'
-                                }, children: ["(", totalCount, " ", totalCount === 1 ? 'пользователь' : totalCount < 5 ? 'пользователя' : 'пользователей', ")"] }))] }), isAdmin && totalCount !== null && totalCount > 0 && (_jsx("div", { style: { marginTop: '12px' }, children: _jsx("button", { onClick: handleDeleteAllUsers, disabled: deleting || loading, style: {
-                                padding: '8px 16px',
-                                backgroundColor: 'var(--tg-theme-destructive-text-color, #d7263d)',
-                                color: '#fff',
-                                border: 'none',
-                                borderRadius: '8px',
-                                fontSize: '14px',
-                                fontWeight: '500',
-                                cursor: deleting || loading ? 'not-allowed' : 'pointer',
-                                opacity: deleting || loading ? 0.6 : 1,
-                                transition: 'opacity 0.2s',
-                            }, children: deleting ? 'Удаление...' : 'Очистить базу данных' }) }))] }), error && (_jsx("div", { className: "error", style: { padding: '16px', margin: '16px 0' }, children: error })), !error && (_jsx("div", { style: { marginTop: '16px' }, children: _jsx(UsersList, { users: users, loading: loading }) }))] }));
+                                }, children: ["(", totalCount, " ", totalCount === 1 ? 'пользователь' : totalCount < 5 ? 'пользователя' : 'пользователей', ")"] }))] }), isAdmin && (_jsxs("div", { style: { marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }, children: [_jsx("button", { onClick: () => {
+                                    setRefreshKey(prev => prev + 1);
+                                    fetchUsers();
+                                }, disabled: loading || deleting, style: {
+                                    padding: '8px 16px',
+                                    backgroundColor: 'var(--tg-theme-button-color, #3390ec)',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    cursor: loading || deleting ? 'not-allowed' : 'pointer',
+                                    opacity: loading || deleting ? 0.6 : 1,
+                                    transition: 'opacity 0.2s',
+                                }, children: loading ? 'Загрузка...' : '🔄 Обновить' }), totalCount !== null && totalCount > 0 && (_jsx("button", { onClick: handleDeleteAllUsers, disabled: deleting || loading, style: {
+                                    padding: '8px 16px',
+                                    backgroundColor: 'var(--tg-theme-destructive-text-color, #d7263d)',
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    cursor: deleting || loading ? 'not-allowed' : 'pointer',
+                                    opacity: deleting || loading ? 0.6 : 1,
+                                    transition: 'opacity 0.2s',
+                                }, children: deleting ? 'Удаление...' : '🗑️ Очистить базу' }))] }))] }), error && (_jsx("div", { className: "error", style: { padding: '16px', margin: '16px 0' }, children: error })), !error && (_jsx("div", { style: { marginTop: '16px' }, children: _jsx(UsersList, { users: users, loading: loading }) }))] }));
 };
 export default UsersPage;

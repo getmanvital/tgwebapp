@@ -130,8 +130,18 @@ router.get('/users', async (req: Request, res: Response) => {
     // Express автоматически приводит заголовки к lowercase
     const adminUsername = req.headers['x-admin-username'] as string | undefined;
     
+    logger.debug({
+      adminUsername,
+      ip: req.ip,
+    }, 'GET /auth/users request');
+    
     if (!isAdmin(adminUsername)) {
-      logger.warn({ adminUsername, ip: req.ip }, 'Unauthorized access attempt to /auth/users');
+      logger.warn({ 
+        adminUsername, 
+        normalized: normalizeUsername(adminUsername),
+        expected: ADMIN_USERNAME,
+        ip: req.ip 
+      }, 'Unauthorized access attempt to /auth/users');
       return res.status(403).json({ 
         error: 'Forbidden: Admin access required' 
       });
@@ -144,7 +154,8 @@ router.get('/users', async (req: Request, res: Response) => {
     logger.info({ 
       totalCount, 
       fetchedCount: users.length,
-      userIds: users.map(u => u.id)
+      userIds: users.map(u => typeof u.id === 'string' ? parseInt(u.id, 10) : Number(u.id)),
+      adminUsername,
     }, 'Fetching all users from database');
     
     // Преобразуем timestamp в читаемые даты и форматируем данные
