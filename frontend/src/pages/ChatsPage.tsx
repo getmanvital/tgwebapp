@@ -42,13 +42,15 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
     }
   }, [isAdmin, user?.username]);
 
-  const fetchChatHistory = useCallback(async (userId: number) => {
+  const fetchChatHistory = useCallback(async (userId: number, silent = false) => {
     if (!isAdmin || !user?.username) {
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
 
     try {
       const response = await getChatHistory(user.username!, userId);
@@ -70,24 +72,37 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
       }
     } catch (err: any) {
       logger.error('[ChatsPage] Error loading chat history:', err);
-      setError(`Ошибка загрузки истории: ${err?.message || 'Неизвестная ошибка'}`);
+      if (!silent) {
+        setError(`Ошибка загрузки истории: ${err?.message || 'Неизвестная ошибка'}`);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, [isAdmin, user?.username]);
 
   useEffect(() => {
     fetchChats();
-  }, [fetchChats, refreshKey]);
+    
+    // Автообновление списка чатов каждые 3 секунды, если чат не открыт
+    const chatsInterval = setInterval(() => {
+      if (!selectedUserId) {
+        fetchChats();
+      }
+    }, 3000);
+
+    return () => clearInterval(chatsInterval);
+  }, [fetchChats, selectedUserId, refreshKey]);
 
   useEffect(() => {
     if (selectedUserId) {
       fetchChatHistory(selectedUserId);
       
-      // Автообновление истории каждые 5 секунд
+      // Автообновление истории каждые 2 секунды (тихое обновление без показа loading)
       const interval = setInterval(() => {
-        fetchChatHistory(selectedUserId);
-      }, 5000);
+        fetchChatHistory(selectedUserId, true);
+      }, 2000);
 
       return () => clearInterval(interval);
     } else {
