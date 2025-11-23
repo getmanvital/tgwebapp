@@ -291,4 +291,8 @@ export const usersQueries = {
     const result = await pool.query(`SELECT COUNT(*) as count FROM users`);
     return parseInt(result.rows[0].count, 10);
   },
+  
+  deleteAll: async (): Promise<void> => {
+    await pool.query(`DELETE FROM users`);
+  },
 };

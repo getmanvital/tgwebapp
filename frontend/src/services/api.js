@@ -242,3 +242,35 @@ export const checkUserExists = async (userId) => {
         throw error;
     }
 };
+/**
+ * Удаляет всех пользователей из базы данных (только для администратора)
+ * @param adminUsername - Username администратора для проверки прав
+ * @returns Promise с результатом удаления
+ */
+export const deleteAllUsers = async (adminUsername) => {
+    try {
+        if (!adminUsername) {
+            throw new Error('Admin username is required');
+        }
+        const normalizedUsername = normalizeUsername(adminUsername);
+        const client = getClient();
+        logger.warn('[API] Attempting to delete all users', { adminUsername: normalizedUsername });
+        const { data } = await client.delete('/auth/users', {
+            headers: {
+                'X-Admin-Username': normalizedUsername,
+            },
+            timeout: 15000,
+        });
+        logger.warn('[API] All users deleted successfully', { deletedCount: data.deletedCount });
+        return data;
+    }
+    catch (error) {
+        logger.error('[API] Error deleting all users:', {
+            error: error?.message,
+            status: error?.response?.status,
+            responseData: error?.response?.data,
+            adminUsername,
+        });
+        throw error;
+    }
+};

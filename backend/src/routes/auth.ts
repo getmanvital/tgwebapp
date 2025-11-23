@@ -323,5 +323,46 @@ router.get('/users/:id', async (req: Request, res: Response) => {
   }
 });
 
+router.delete('/users', async (req: Request, res: Response) => {
+  try {
+    // Проверка прав администратора
+    const adminUsername = req.headers['x-admin-username'] as string | undefined;
+    
+    if (!isAdmin(adminUsername)) {
+      logger.warn({ adminUsername, ip: req.ip }, 'Unauthorized attempt to delete all users');
+      return res.status(403).json({ 
+        error: 'Forbidden: Admin access required' 
+      });
+    }
+    
+    // Получаем количество пользователей перед удалением для логирования
+    const countBefore = await usersQueries.count();
+    
+    // Удаляем всех пользователей
+    await usersQueries.deleteAll();
+    
+    logger.warn({ 
+      adminUsername,
+      countBefore,
+      ip: req.ip
+    }, 'All users deleted from database');
+    
+    res.json({ 
+      success: true, 
+      message: `Deleted ${countBefore} users from database`,
+      deletedCount: countBefore
+    });
+  } catch (error: any) {
+    logger.error({ 
+      error: error?.message,
+      stack: error?.stack,
+      code: error?.code,
+      name: error?.name,
+      adminUsername: req.headers['x-admin-username']
+    }, 'Error deleting all users');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;
 
