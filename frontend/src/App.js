@@ -81,6 +81,7 @@ function App() {
             }, children: _jsx("p", { children: "\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430..." }) }));
     }
     const handleNavigateToUsers = () => {
+        logger.info('[App] Navigating to Users page');
         setCurrentPage('users');
         setUsersPageKey(prev => prev + 1); // Принудительно перемонтируем компонент для обновления данных
     };

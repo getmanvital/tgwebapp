@@ -98,6 +98,7 @@ function App() {
   }
 
   const handleNavigateToUsers = () => {
+    logger.info('[App] Navigating to Users page');
     setCurrentPage('users');
     setUsersPageKey(prev => prev + 1); // Принудительно перемонтируем компонент для обновления данных
   };

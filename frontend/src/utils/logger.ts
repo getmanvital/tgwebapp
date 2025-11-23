@@ -12,9 +12,8 @@ export const logger = {
     }
   },
   info: (...args: any[]) => {
-    if (isDev) {
-      console.info(...args);
-    }
+    // В production логируем важные события (info)
+    console.info(...args);
   },
   warn: (...args: any[]) => {
     if (isDev) {

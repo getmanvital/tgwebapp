@@ -78,6 +78,43 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
     fetchUsers();
   }, [fetchUsers]);
 
+  // Автоматическое обновление при фокусе на странице (когда пользователь возвращается на вкладку)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isAdmin && user?.username) {
+        logger.info('[UsersPage] Page became visible, refreshing users');
+        setRefreshKey(prev => prev + 1);
+      }
+    };
+
+    const handleFocus = () => {
+      if (isAdmin && user?.username) {
+        logger.info('[UsersPage] Window focused, refreshing users');
+        setRefreshKey(prev => prev + 1);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [isAdmin, user?.username]);
+
+  // Периодическое обновление каждые 30 секунд (опционально, можно отключить)
+  useEffect(() => {
+    if (!isAdmin || !user?.username) return;
+
+    const interval = setInterval(() => {
+      logger.info('[UsersPage] Auto-refreshing users (30s interval)');
+      setRefreshKey(prev => prev + 1);
+    }, 30000); // 30 секунд
+
+    return () => clearInterval(interval);
+  }, [isAdmin, user?.username]);
+
   const handleDeleteAllUsers = async () => {
     if (!user?.username) {
       setError('Не удалось определить пользователя');

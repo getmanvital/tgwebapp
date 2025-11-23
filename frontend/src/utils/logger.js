@@ -10,9 +10,8 @@ export const logger = {
         }
     },
     info: (...args) => {
-        if (isDev) {
-            console.info(...args);
-        }
+        // В production логируем важные события (info)
+        console.info(...args);
     },
     warn: (...args) => {
         if (isDev) {
