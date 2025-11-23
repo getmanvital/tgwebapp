@@ -165,7 +165,10 @@ export const getUsers = async (adminUsername) => {
             },
             timeout: 15000,
         });
-        logger.debug('[API] Users fetched successfully', { count: data.count });
+        logger.debug('[API] Users fetched successfully', {
+            count: data.count,
+            totalCount: data.totalCount
+        });
         return data;
     }
     catch (error) {
@@ -179,6 +182,37 @@ export const getUsers = async (adminUsername) => {
                 url: error?.config?.url,
                 headers: error?.config?.headers,
             },
+        });
+        throw error;
+    }
+};
+/**
+ * Получает только количество пользователей в базе данных (только для администратора)
+ * @param adminUsername - Username администратора для проверки прав
+ * @returns Promise с количеством пользователей
+ */
+export const getUsersCount = async (adminUsername) => {
+    try {
+        if (!adminUsername) {
+            throw new Error('Admin username is required');
+        }
+        const normalizedUsername = normalizeUsername(adminUsername);
+        const client = getClient();
+        const { data } = await client.get('/auth/users/count', {
+            headers: {
+                'X-Admin-Username': normalizedUsername,
+            },
+            timeout: 10000,
+        });
+        logger.debug('[API] User count fetched successfully', { count: data.count });
+        return data.count;
+    }
+    catch (error) {
+        logger.error('[API] Error fetching user count:', {
+            error: error?.message,
+            status: error?.response?.status,
+            responseData: error?.response?.data,
+            adminUsername,
         });
         throw error;
     }

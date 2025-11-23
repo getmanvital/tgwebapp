@@ -175,7 +175,8 @@ export const saveUser = async (userData: {
 };
 
 export interface UsersResponse {
-  count: number;
+  count: number; // Количество пользователей в текущем ответе
+  totalCount?: number; // Общее количество пользователей в базе данных
   users: User[];
 }
 
@@ -208,7 +209,10 @@ export const getUsers = async (adminUsername: string): Promise<UsersResponse> =>
       timeout: 15000,
     });
     
-    logger.debug('[API] Users fetched successfully', { count: data.count });
+    logger.debug('[API] Users fetched successfully', { 
+      count: data.count, 
+      totalCount: data.totalCount 
+    });
     return data;
   } catch (error: any) {
     logger.error('[API] Error fetching users:', {
@@ -221,6 +225,40 @@ export const getUsers = async (adminUsername: string): Promise<UsersResponse> =>
         url: error?.config?.url,
         headers: error?.config?.headers,
       },
+    });
+    throw error;
+  }
+};
+
+/**
+ * Получает только количество пользователей в базе данных (только для администратора)
+ * @param adminUsername - Username администратора для проверки прав
+ * @returns Promise с количеством пользователей
+ */
+export const getUsersCount = async (adminUsername: string): Promise<number> => {
+  try {
+    if (!adminUsername) {
+      throw new Error('Admin username is required');
+    }
+    
+    const normalizedUsername = normalizeUsername(adminUsername);
+    const client = getClient();
+    
+    const { data } = await client.get<{ count: number }>('/auth/users/count', {
+      headers: {
+        'X-Admin-Username': normalizedUsername,
+      },
+      timeout: 10000,
+    });
+    
+    logger.debug('[API] User count fetched successfully', { count: data.count });
+    return data.count;
+  } catch (error: any) {
+    logger.error('[API] Error fetching user count:', {
+      error: error?.message,
+      status: error?.response?.status,
+      responseData: error?.response?.data,
+      adminUsername,
     });
     throw error;
   }

@@ -10,6 +10,7 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
   const user = useTelegramUser();
   const isAdmin = useIsAdmin();
   const [users, setUsers] = useState<User[]>([]);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +27,11 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
       try {
         const response = await getUsers(user.username!);
         setUsers(response.users);
-        logger.debug('Users loaded', { count: response.count });
+        setTotalCount(response.totalCount ?? response.count);
+        logger.debug('Users loaded', { 
+          count: response.count, 
+          totalCount: response.totalCount 
+        });
       } catch (err: any) {
         logger.error('Error loading users:', {
           error: err,
@@ -67,7 +72,19 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
             ← Назад
           </button>
         </div>
-        <h1>Пользователи</h1>
+        <h1>
+          Пользователи
+          {totalCount !== null && (
+            <span style={{ 
+              fontSize: '0.7em', 
+              fontWeight: 'normal', 
+              color: 'var(--tg-theme-hint-color, #999)',
+              marginLeft: '8px'
+            }}>
+              ({totalCount} {totalCount === 1 ? 'пользователь' : totalCount < 5 ? 'пользователя' : 'пользователей'})
+            </span>
+          )}
+        </h1>
       </header>
 
       {error && (

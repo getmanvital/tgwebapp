@@ -133,6 +133,7 @@ router.get('/users', async (req: Request, res: Response) => {
     
     res.json({
       count: users.length,
+      totalCount: totalCount, // Общее количество пользователей в базе
       users: formattedUsers
     });
   } catch (error: any) {
@@ -142,6 +143,34 @@ router.get('/users', async (req: Request, res: Response) => {
       code: error?.code,
       name: error?.name
     }, 'Error fetching users');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/users/count', async (req: Request, res: Response) => {
+  try {
+    // Проверка прав администратора
+    const adminUsername = req.headers['x-admin-username'] as string | undefined;
+    
+    if (!isAdmin(adminUsername)) {
+      logger.warn({ adminUsername, ip: req.ip }, 'Unauthorized access attempt to /auth/users/count');
+      return res.status(403).json({ 
+        error: 'Forbidden: Admin access required' 
+      });
+    }
+    
+    const totalCount = await usersQueries.count();
+    
+    logger.info({ totalCount }, 'User count requested');
+    
+    res.json({ count: totalCount });
+  } catch (error: any) {
+    logger.error({ 
+      error: error?.message,
+      stack: error?.stack,
+      code: error?.code,
+      name: error?.name
+    }, 'Error fetching user count');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

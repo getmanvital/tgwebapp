@@ -9,6 +9,7 @@ const UsersPage = ({ onBack }) => {
     const user = useTelegramUser();
     const isAdmin = useIsAdmin();
     const [users, setUsers] = useState([]);
+    const [totalCount, setTotalCount] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     useEffect(() => {
@@ -22,7 +23,11 @@ const UsersPage = ({ onBack }) => {
             try {
                 const response = await getUsers(user.username);
                 setUsers(response.users);
-                logger.debug('Users loaded', { count: response.count });
+                setTotalCount(response.totalCount ?? response.count);
+                logger.debug('Users loaded', {
+                    count: response.count,
+                    totalCount: response.totalCount
+                });
             }
             catch (err) {
                 logger.error('Error loading users:', {
@@ -55,6 +60,11 @@ const UsersPage = ({ onBack }) => {
         };
         fetchUsers();
     }, [isAdmin, user?.username]);
-    return (_jsxs("main", { children: [_jsxs("header", { children: [_jsx("div", { className: "header-actions", children: _jsx("button", { className: "back-button", onClick: onBack, children: "\u2190 \u041D\u0430\u0437\u0430\u0434" }) }), _jsx("h1", { children: "\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0438" })] }), error && (_jsx("div", { className: "error", style: { padding: '16px', margin: '16px 0' }, children: error })), !error && (_jsx("div", { style: { marginTop: '16px' }, children: _jsx(UsersList, { users: users, loading: loading }) }))] }));
+    return (_jsxs("main", { children: [_jsxs("header", { children: [_jsx("div", { className: "header-actions", children: _jsx("button", { className: "back-button", onClick: onBack, children: "\u2190 \u041D\u0430\u0437\u0430\u0434" }) }), _jsxs("h1", { children: ["\u041F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u0438", totalCount !== null && (_jsxs("span", { style: {
+                                    fontSize: '0.7em',
+                                    fontWeight: 'normal',
+                                    color: 'var(--tg-theme-hint-color, #999)',
+                                    marginLeft: '8px'
+                                }, children: ["(", totalCount, " ", totalCount === 1 ? 'пользователь' : totalCount < 5 ? 'пользователя' : 'пользователей', ")"] }))] })] }), error && (_jsx("div", { className: "error", style: { padding: '16px', margin: '16px 0' }, children: error })), !error && (_jsx("div", { style: { marginTop: '16px' }, children: _jsx(UsersList, { users: users, loading: loading }) }))] }));
 };
 export default UsersPage;
