@@ -28,14 +28,29 @@ router.post('/webhook', async (req: Request, res: Response) => {
   try {
     const update = req.body;
     
+    logger.debug('Webhook received:', {
+      updateId: update.update_id,
+      hasMessage: !!update.message,
+      messageType: update.message?.text ? 'text' : update.message ? 'other' : 'none',
+    });
+    
     // Обработка текстовых сообщений от клиентов
     if (update.message && update.message.text) {
       const message = update.message;
       const chat = message.chat;
       const user = message.from;
 
+      logger.info('Processing message from user', {
+        userId: user.id,
+        username: user.username,
+        firstName: user.first_name,
+        messageText: message.text?.substring(0, 100),
+        managerId: TELEGRAM_MANAGER_ID,
+      });
+
       // Пропускаем сообщения от бота самого себя и от менеджера
       if (user.id.toString() === TELEGRAM_MANAGER_ID) {
+        logger.debug('Message from manager, skipping');
         // Это сообщение от менеджера - обработаем его позже
         return res.status(200).json({ ok: true });
       }
@@ -69,9 +84,8 @@ router.post('/webhook', async (req: Request, res: Response) => {
         );
       }
 
-      // Получаем все существующие сообщения для проверки
-      const allMessages = await messagesQueries.getByUserId(user.id);
-      const firstMessage = allMessages.length > 0 ? allMessages[0] : null;
+      // Проверяем, есть ли уже сообщения от этого пользователя
+      const firstMessage = await messagesQueries.getFirstMessage(user.id);
       
       const userName = user.username ? `@${user.username}` : `${user.first_name}${user.last_name ? ` ${user.last_name}` : ''}`;
       
@@ -99,7 +113,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
       }
 
       // Сохраняем сообщение в БД с ID сообщения от Telegram
-      await messagesQueries.insert(
+      const messageId = await messagesQueries.insert(
         user.id,
         null, // product_id для обычных сообщений
         'user_to_manager',
@@ -107,6 +121,12 @@ router.post('/webhook', async (req: Request, res: Response) => {
         message.text,
         now
       );
+
+      logger.info('Message saved to database', {
+        userId: user.id,
+        telegramMessageId,
+        messageId,
+      });
     }
 
     res.status(200).json({ ok: true });
@@ -114,6 +134,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
     logger.error({
       error: error?.message,
       stack: error?.stack,
+      update: req.body,
     }, 'Error processing webhook');
     res.status(200).json({ ok: true }); // Всегда возвращаем 200 для Telegram
   }
@@ -122,9 +143,17 @@ router.post('/webhook', async (req: Request, res: Response) => {
 // Отправка уведомления о товаре менеджеру
 router.post('/contact', async (req: Request, res: Response) => {
   try {
+    logger.debug('Contact request received', { body: req.body });
+    
     const { userId, productId, productTitle, productPrice } = req.body;
 
     if (!userId || !productId || !productTitle) {
+      logger.warn('Missing required fields in contact request', {
+        hasUserId: !!userId,
+        hasProductId: !!productId,
+        hasProductTitle: !!productTitle,
+        body: req.body,
+      });
       return res.status(400).json({
         error: 'Missing required fields: userId, productId, productTitle',
       });
@@ -134,6 +163,13 @@ router.post('/contact', async (req: Request, res: Response) => {
       logger.error('TELEGRAM_MANAGER_ID is not configured');
       return res.status(500).json({ error: 'Manager ID not configured' });
     }
+
+    logger.info('Processing contact request', {
+      userId,
+      productId,
+      productTitle,
+      productPrice,
+    });
 
     // Получаем данные пользователя
     const user = await usersQueries.getById(userId);
@@ -219,7 +255,7 @@ router.post('/contact', async (req: Request, res: Response) => {
 
     // Сохраняем сообщение в БД
     const now = Date.now();
-    await messagesQueries.insert(
+    const messageId = await messagesQueries.insert(
       userId,
       productId,
       'user_to_manager',
@@ -227,6 +263,13 @@ router.post('/contact', async (req: Request, res: Response) => {
       caption.replace(/<[^>]*>/g, ''), // Убираем HTML теги для хранения
       now
     );
+
+    logger.info('Contact message saved to database', {
+      userId,
+      productId,
+      messageId,
+      telegramMessageId,
+    });
 
     res.json({
       success: true,
@@ -249,12 +292,20 @@ router.get('/chats', async (req: Request, res: Response) => {
   try {
     const adminUsername = req.headers['x-admin-username'] as string | undefined;
 
+    logger.debug('GET /chats request', {
+      adminUsername,
+      ip: req.ip,
+      headers: req.headers,
+    });
+
     if (!isAdmin(adminUsername)) {
       logger.warn({ adminUsername, ip: req.ip }, 'Unauthorized access attempt to /messages/chats');
       return res.status(403).json({ error: 'Forbidden: Admin access required' });
     }
 
+    logger.info('Fetching active chats');
     const chats = await messagesQueries.getActiveChats();
+    logger.info('Active chats fetched', { count: chats?.length || 0 });
 
     // Форматируем данные
     const formattedChats = chats.map((chat: any) => ({

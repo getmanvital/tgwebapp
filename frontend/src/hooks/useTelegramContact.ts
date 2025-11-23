@@ -34,12 +34,18 @@ export const useTelegramContact = () => {
     }
 
     if (!user?.id) {
-      logger.warn('[useTelegramContact] User ID not available');
+      logger.warn('[useTelegramContact] User ID not available', { user });
       return;
     }
 
     const tg = window.Telegram.WebApp;
     currentProductRef.current = product;
+
+    logger.debug('[useTelegramContact] Showing contact button', {
+      productId: product.id,
+      productTitle: product.title,
+      userId: user.id,
+    });
 
     // Удаляем предыдущий обработчик
     if (handlerRef.current) {
@@ -48,13 +54,28 @@ export const useTelegramContact = () => {
           tg.MainButton.offClick(handlerRef.current);
         }
       } catch (e) {
-        // Игнорируем ошибки при удалении обработчика
+        logger.warn('[useTelegramContact] Error removing previous handler', e);
       }
     }
 
     // Создаем новый обработчик
     const handleClick = async () => {
-      if (isSendingRef.current || !currentProductRef.current || !user?.id) {
+      logger.debug('[useTelegramContact] MainButton clicked', {
+        isSending: isSendingRef.current,
+        currentProduct: currentProductRef.current?.id,
+        userId: user?.id,
+      });
+
+      if (isSendingRef.current) {
+        logger.debug('[useTelegramContact] Already sending, ignoring click');
+        return;
+      }
+
+      if (!currentProductRef.current || !user?.id) {
+        logger.warn('[useTelegramContact] Missing product or user ID', {
+          hasProduct: !!currentProductRef.current,
+          hasUserId: !!user?.id,
+        });
         return;
       }
 
@@ -69,12 +90,22 @@ export const useTelegramContact = () => {
 
         const product = currentProductRef.current;
         
-        await sendProductContactRequest(
+        logger.info('[useTelegramContact] Sending product contact request', {
+          userId: user.id,
+          productId: product.id,
+          productTitle: product.title,
+        });
+        
+        const result = await sendProductContactRequest(
           user.id,
           product.id,
           product.title,
           product.price?.text
         );
+
+        logger.info('[useTelegramContact] Contact request sent successfully', {
+          result,
+        });
 
         // Скрываем кнопку после успешной отправки
         tg.MainButton.hide();
@@ -93,7 +124,12 @@ export const useTelegramContact = () => {
 
         onSuccess?.();
       } catch (error: any) {
-        logger.error('[useTelegramContact] Error sending contact request:', error);
+        logger.error('[useTelegramContact] Error sending contact request:', {
+          error: error?.message,
+          stack: error?.stack,
+          response: error?.response?.data,
+          status: error?.response?.status,
+        });
         
         // Скрываем прогресс
         if (tg.MainButton.hideProgress) {
@@ -108,7 +144,7 @@ export const useTelegramContact = () => {
 
         // Показываем ошибку
         if (tg.showAlert) {
-          tg.showAlert('Не удалось отправить запрос. Попробуйте позже.');
+          tg.showAlert(`Не удалось отправить запрос: ${error?.response?.data?.error || error?.message || 'Попробуйте позже'}`);
         }
 
         onError?.(error);
@@ -120,8 +156,18 @@ export const useTelegramContact = () => {
     handlerRef.current = handleClick;
 
     // Настраиваем кнопку
-    tg.MainButton.text = `Написать про ${product.title}`;
-    tg.MainButton.onClick(handleClick);
+    const buttonText = `Написать про ${product.title}`;
+    tg.MainButton.text = buttonText;
+    
+    // Устанавливаем обработчик
+    try {
+      tg.MainButton.onClick(handleClick);
+      logger.debug('[useTelegramContact] MainButton onClick handler set', { buttonText });
+    } catch (e) {
+      logger.error('[useTelegramContact] Error setting MainButton onClick handler', e);
+      return;
+    }
+    
     tg.MainButton.show();
 
     // Тактильная обратная связь

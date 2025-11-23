@@ -382,26 +382,34 @@ export const messagesQueries = {
 
   getActiveChats: async (): Promise<any[]> => {
     const result = await pool.query(`
-      SELECT DISTINCT ON (m.user_id)
+      WITH last_messages AS (
+        SELECT DISTINCT ON (user_id) 
+          id,
+          user_id,
+          content,
+          direction,
+          sent_at,
+          product_id
+        FROM messages
+        ORDER BY user_id, sent_at DESC
+      )
+      SELECT 
         u.id as user_id,
         u.first_name,
         u.last_name,
         u.username,
         u.photo_url,
-        m.id as last_message_id,
-        m.content as last_message_content,
-        m.direction as last_message_direction,
-        m.sent_at as last_message_time,
-        m.product_id,
+        lm.id as last_message_id,
+        lm.content as last_message_content,
+        lm.direction as last_message_direction,
+        lm.sent_at as last_message_time,
+        lm.product_id,
         p.title as product_title,
         (SELECT COUNT(*) FROM messages WHERE user_id = u.id AND direction = 'user_to_manager' AND read_at IS NULL) as unread_count
-      FROM messages m
-      INNER JOIN users u ON m.user_id = u.id
-      LEFT JOIN products p ON m.product_id = p.id
-      WHERE m.id IN (
-        SELECT MAX(id) FROM messages GROUP BY user_id
-      )
-      ORDER BY m.user_id, m.sent_at DESC
+      FROM last_messages lm
+      INNER JOIN users u ON lm.user_id = u.id
+      LEFT JOIN products p ON lm.product_id = p.id
+      ORDER BY lm.sent_at DESC
     `);
     return result.rows;
   },
