@@ -28,11 +28,11 @@ router.post('/webhook', async (req: Request, res: Response) => {
   try {
     const update = req.body;
     
-    logger.debug('Webhook received:', {
+    logger.debug({
       updateId: update.update_id,
       hasMessage: !!update.message,
       messageType: update.message?.text ? 'text' : update.message ? 'other' : 'none',
-    });
+    }, 'Webhook received');
     
     // Обработка текстовых сообщений от клиентов
     if (update.message && update.message.text) {
@@ -40,13 +40,13 @@ router.post('/webhook', async (req: Request, res: Response) => {
       const chat = message.chat;
       const user = message.from;
 
-      logger.info('Processing message from user', {
+      logger.info({
         userId: user.id,
         username: user.username,
         firstName: user.first_name,
         messageText: message.text?.substring(0, 100),
         managerId: TELEGRAM_MANAGER_ID,
-      });
+      }, 'Processing message from user');
 
       // Пропускаем сообщения от бота самого себя и от менеджера
       if (user.id.toString() === TELEGRAM_MANAGER_ID) {
@@ -122,11 +122,11 @@ router.post('/webhook', async (req: Request, res: Response) => {
         now
       );
 
-      logger.info('Message saved to database', {
+      logger.info({
         userId: user.id,
         telegramMessageId,
         messageId,
-      });
+      }, 'Message saved to database');
     }
 
     res.status(200).json({ ok: true });
@@ -143,17 +143,17 @@ router.post('/webhook', async (req: Request, res: Response) => {
 // Отправка уведомления о товаре менеджеру
 router.post('/contact', async (req: Request, res: Response) => {
   try {
-    logger.debug('Contact request received', { body: req.body });
+    logger.debug({ body: req.body }, 'Contact request received');
     
     const { userId, productId, productTitle, productPrice } = req.body;
 
     if (!userId || !productId || !productTitle) {
-      logger.warn('Missing required fields in contact request', {
+      logger.warn({
         hasUserId: !!userId,
         hasProductId: !!productId,
         hasProductTitle: !!productTitle,
         body: req.body,
-      });
+      }, 'Missing required fields in contact request');
       return res.status(400).json({
         error: 'Missing required fields: userId, productId, productTitle',
       });
@@ -164,12 +164,12 @@ router.post('/contact', async (req: Request, res: Response) => {
       return res.status(500).json({ error: 'Manager ID not configured' });
     }
 
-    logger.info('Processing contact request', {
+    logger.info({
       userId,
       productId,
       productTitle,
       productPrice,
-    });
+    }, 'Processing contact request');
 
     // Получаем данные пользователя
     const user = await usersQueries.getById(userId);
@@ -264,12 +264,12 @@ router.post('/contact', async (req: Request, res: Response) => {
       now
     );
 
-    logger.info('Contact message saved to database', {
+    logger.info({
       userId,
       productId,
       messageId,
       telegramMessageId,
-    });
+    }, 'Contact message saved to database');
 
     res.json({
       success: true,
@@ -292,11 +292,11 @@ router.get('/chats', async (req: Request, res: Response) => {
   try {
     const adminUsername = req.headers['x-admin-username'] as string | undefined;
 
-    logger.debug('GET /chats request', {
+    logger.debug({
       adminUsername,
       ip: req.ip,
       headers: req.headers,
-    });
+    }, 'GET /chats request');
 
     if (!isAdmin(adminUsername)) {
       logger.warn({ adminUsername, ip: req.ip }, 'Unauthorized access attempt to /messages/chats');
@@ -305,7 +305,7 @@ router.get('/chats', async (req: Request, res: Response) => {
 
     logger.info('Fetching active chats');
     const chats = await messagesQueries.getActiveChats();
-    logger.info('Active chats fetched', { count: chats?.length || 0 });
+    logger.info({ count: chats?.length || 0 }, 'Active chats fetched');
 
     // Форматируем данные
     const formattedChats = chats.map((chat: any) => ({
