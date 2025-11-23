@@ -63,7 +63,9 @@ export const useTelegramContact = () => {
       try {
         // Показываем состояние загрузки
         tg.MainButton.text = 'Отправка...';
-        tg.MainButton.showProgress();
+        if (tg.MainButton.showProgress) {
+          tg.MainButton.showProgress();
+        }
 
         const product = currentProductRef.current;
         
@@ -94,7 +96,9 @@ export const useTelegramContact = () => {
         logger.error('[useTelegramContact] Error sending contact request:', error);
         
         // Скрываем прогресс
-        tg.MainButton.hideProgress();
+        if (tg.MainButton.hideProgress) {
+          tg.MainButton.hideProgress();
+        }
         tg.MainButton.text = `Написать про ${currentProductRef.current?.title || 'товар'}`;
 
         // Тактильная обратная связь для ошибки
