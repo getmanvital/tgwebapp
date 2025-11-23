@@ -336,9 +336,228 @@ export const deleteAllUsers = async (adminUsername: string): Promise<{ success: 
   }
 };
 
+/**
+ * Отправляет запрос о товаре менеджеру
+ * @param userId - ID пользователя Telegram
+ * @param productId - ID товара
+ * @param productTitle - Название товара
+ * @param productPrice - Цена товара (опционально)
+ * @returns Promise с результатом отправки
+ */
+export const sendProductContactRequest = async (
+  userId: number,
+  productId: number,
+  productTitle: string,
+  productPrice?: string
+): Promise<{ success: boolean; messageId: number; sentAt: string }> => {
+  try {
+    const client = getClient();
+    const { data } = await client.post('/messages/contact', {
+      userId,
+      productId,
+      productTitle,
+      productPrice,
+    }, {
+      timeout: 30000,
+    });
 
+    logger.debug('[API] Product contact request sent successfully', {
+      userId,
+      productId,
+      messageId: data.messageId,
+    });
 
+    return data;
+  } catch (error: any) {
+    logger.error('[API] Error sending product contact request:', {
+      error: error?.message,
+      status: error?.response?.status,
+      responseData: error?.response?.data,
+      userId,
+      productId,
+    });
+    throw error;
+  }
+};
 
+export interface Chat {
+  userId: number;
+  userName: string;
+  firstName: string;
+  lastName: string | null;
+  username: string | null;
+  photoUrl: string | null;
+  unreadCount: number;
+  lastMessage: {
+    id: number;
+    content: string;
+    direction: 'user_to_manager' | 'manager_to_user';
+    sentAt: string;
+  };
+  product: {
+    id: number;
+    title: string;
+  } | null;
+}
+
+export interface ChatsResponse {
+  chats: Chat[];
+}
+
+/**
+ * Получает список активных чатов (только для администратора)
+ * @param adminUsername - Username администратора для проверки прав
+ * @returns Promise со списком чатов
+ */
+export const getChats = async (adminUsername: string): Promise<ChatsResponse> => {
+  try {
+    if (!adminUsername) {
+      throw new Error('Admin username is required');
+    }
+
+    const normalizedUsername = normalizeUsername(adminUsername);
+    const client = getClient();
+
+    const { data } = await client.get<ChatsResponse>('/messages/chats', {
+      headers: {
+        'X-Admin-Username': normalizedUsername,
+      },
+      timeout: 15000,
+    });
+
+    logger.debug('[API] Chats fetched successfully', {
+      count: data.chats?.length,
+    });
+
+    return data;
+  } catch (error: any) {
+    logger.error('[API] Error fetching chats:', {
+      error: error?.message,
+      status: error?.response?.status,
+      responseData: error?.response?.data,
+      adminUsername,
+    });
+    throw error;
+  }
+};
+
+export interface ChatMessage {
+  id: number;
+  direction: 'user_to_manager' | 'manager_to_user';
+  content: string;
+  productId: number | null;
+  productTitle: string | null;
+  productPrice: string | null;
+  sentAt: string;
+  readAt: string | null;
+}
+
+export interface ChatHistoryResponse {
+  user: {
+    id: number;
+    firstName: string;
+    lastName: string | null;
+    username: string | null;
+    photoUrl: string | null;
+  };
+  messages: ChatMessage[];
+}
+
+/**
+ * Получает историю переписки с конкретным пользователем (только для администратора)
+ * @param adminUsername - Username администратора для проверки прав
+ * @param userId - ID пользователя
+ * @returns Promise с историей переписки
+ */
+export const getChatHistory = async (
+  adminUsername: string,
+  userId: number
+): Promise<ChatHistoryResponse> => {
+  try {
+    if (!adminUsername) {
+      throw new Error('Admin username is required');
+    }
+
+    const normalizedUsername = normalizeUsername(adminUsername);
+    const client = getClient();
+
+    const { data } = await client.get<ChatHistoryResponse>(`/messages/chats/${userId}`, {
+      headers: {
+        'X-Admin-Username': normalizedUsername,
+      },
+      timeout: 15000,
+    });
+
+    logger.debug('[API] Chat history fetched successfully', {
+      userId,
+      messageCount: data.messages?.length,
+    });
+
+    return data;
+  } catch (error: any) {
+    logger.error('[API] Error fetching chat history:', {
+      error: error?.message,
+      status: error?.response?.status,
+      responseData: error?.response?.data,
+      adminUsername,
+      userId,
+    });
+    throw error;
+  }
+};
+
+/**
+ * Отправляет сообщение клиенту от менеджера (только для администратора)
+ * @param adminUsername - Username администратора для проверки прав
+ * @param userId - ID клиента
+ * @param message - Текст сообщения
+ * @returns Promise с результатом отправки
+ */
+export const sendMessageToClient = async (
+  adminUsername: string,
+  userId: number,
+  message: string
+): Promise<{ success: boolean; messageId: number; sentAt: string }> => {
+  try {
+    if (!adminUsername) {
+      throw new Error('Admin username is required');
+    }
+
+    if (!message || message.trim().length === 0) {
+      throw new Error('Message cannot be empty');
+    }
+
+    const normalizedUsername = normalizeUsername(adminUsername);
+    const client = getClient();
+
+    const { data } = await client.post(
+      `/messages/chats/${userId}/send`,
+      { message: message.trim() },
+      {
+        headers: {
+          'X-Admin-Username': normalizedUsername,
+        },
+        timeout: 30000,
+      }
+    );
+
+    logger.debug('[API] Message sent to client successfully', {
+      userId,
+      messageId: data.messageId,
+    });
+
+    return data;
+  } catch (error: any) {
+    logger.error('[API] Error sending message to client:', {
+      error: error?.message,
+      status: error?.response?.status,
+      responseData: error?.response?.data,
+      adminUsername,
+      userId,
+    });
+    throw error;
+  }
+};
 
 
 

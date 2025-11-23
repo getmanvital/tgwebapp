@@ -77,6 +77,19 @@ const initDatabase = async (): Promise<void> => {
         visit_count INTEGER DEFAULT 1
       );
 
+      CREATE TABLE IF NOT EXISTS messages (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        product_id BIGINT,
+        direction TEXT NOT NULL CHECK (direction IN ('user_to_manager', 'manager_to_user')),
+        telegram_message_id BIGINT,
+        content TEXT NOT NULL,
+        sent_at BIGINT NOT NULL,
+        read_at BIGINT,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+      );
+
       CREATE INDEX IF NOT EXISTS idx_products_collection_id ON products(collection_id);
       CREATE INDEX IF NOT EXISTS idx_products_title ON products(title);
       CREATE INDEX IF NOT EXISTS idx_collections_updated_at ON collections(updated_at);
@@ -84,6 +97,10 @@ const initDatabase = async (): Promise<void> => {
       CREATE INDEX IF NOT EXISTS idx_users_id ON users(id);
       CREATE INDEX IF NOT EXISTS idx_users_last_seen_at ON users(last_seen_at);
       CREATE INDEX IF NOT EXISTS idx_collections_sort_order ON collections(sort_order);
+      CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id);
+      CREATE INDEX IF NOT EXISTS idx_messages_product_id ON messages(product_id);
+      CREATE INDEX IF NOT EXISTS idx_messages_sent_at ON messages(sent_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_messages_read_at ON messages(read_at) WHERE read_at IS NULL;
     `);
 
     // Миграция: проверяем наличие колонки sort_order
@@ -300,5 +317,110 @@ export const usersQueries = {
   
   deleteAll: async (): Promise<void> => {
     await pool.query(`DELETE FROM users`);
+  },
+};
+
+// Подготовленные запросы для сообщений
+export const messagesQueries = {
+  insert: async (
+    userId: number,
+    productId: number | null,
+    direction: 'user_to_manager' | 'manager_to_user',
+    telegramMessageId: number | null,
+    content: string,
+    sentAt: number
+  ): Promise<number> => {
+    const result = await pool.query(`
+      INSERT INTO messages (user_id, product_id, direction, telegram_message_id, content, sent_at)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id
+    `, [userId, productId, direction, telegramMessageId, content, sentAt]);
+    return result.rows[0].id;
+  },
+
+  getByUserId: async (userId: number): Promise<any[]> => {
+    const result = await pool.query(`
+      SELECT m.*, p.title as product_title, p.price_text as product_price
+      FROM messages m
+      LEFT JOIN products p ON m.product_id = p.id
+      WHERE m.user_id = $1
+      ORDER BY m.sent_at ASC
+    `, [userId]);
+    return result.rows;
+  },
+
+  getFirstMessage: async (userId: number): Promise<any | null> => {
+    const result = await pool.query(`
+      SELECT * FROM messages 
+      WHERE user_id = $1 
+      ORDER BY sent_at ASC 
+      LIMIT 1
+    `, [userId]);
+    return result.rows[0] || null;
+  },
+
+  getUnreadCount: async (userId: number): Promise<number> => {
+    const result = await pool.query(`
+      SELECT COUNT(*) as count 
+      FROM messages 
+      WHERE user_id = $1 
+        AND direction = 'user_to_manager' 
+        AND read_at IS NULL
+    `, [userId]);
+    return parseInt(result.rows[0].count, 10);
+  },
+
+  markAsRead: async (messageIds: number[]): Promise<void> => {
+    if (messageIds.length === 0) return;
+    const now = Date.now();
+    await pool.query(`
+      UPDATE messages 
+      SET read_at = $1 
+      WHERE id = ANY($2::int[])
+    `, [now, messageIds]);
+  },
+
+  getActiveChats: async (): Promise<any[]> => {
+    const result = await pool.query(`
+      SELECT DISTINCT ON (m.user_id)
+        u.id as user_id,
+        u.first_name,
+        u.last_name,
+        u.username,
+        u.photo_url,
+        m.id as last_message_id,
+        m.content as last_message_content,
+        m.direction as last_message_direction,
+        m.sent_at as last_message_time,
+        m.product_id,
+        p.title as product_title,
+        (SELECT COUNT(*) FROM messages WHERE user_id = u.id AND direction = 'user_to_manager' AND read_at IS NULL) as unread_count
+      FROM messages m
+      INNER JOIN users u ON m.user_id = u.id
+      LEFT JOIN products p ON m.product_id = p.id
+      WHERE m.id IN (
+        SELECT MAX(id) FROM messages GROUP BY user_id
+      )
+      ORDER BY m.user_id, m.sent_at DESC
+    `);
+    return result.rows;
+  },
+
+  getLastMessage: async (userId: number): Promise<any | null> => {
+    const result = await pool.query(`
+      SELECT * FROM messages 
+      WHERE user_id = $1 
+      ORDER BY sent_at DESC 
+      LIMIT 1
+    `, [userId]);
+    return result.rows[0] || null;
+  },
+
+  updateTelegramMessageId: async (messageId: number, telegramMessageId: number): Promise<void> => {
+    await pool.query(`
+      UPDATE messages 
+      SET telegram_message_id = $1 
+      WHERE id = $2
+    `, [telegramMessageId, messageId]);
   },
 };

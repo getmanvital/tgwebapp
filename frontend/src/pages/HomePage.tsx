@@ -8,6 +8,7 @@ import UserAuthStatus from '../components/UserAuthStatus';
 import { getCollections, getProducts } from '../services/api';
 import { useTelegramUser } from '../hooks/useTelegramUser';
 import { useIsAdmin } from '../hooks/useIsAdmin';
+import { useTelegramContact } from '../hooks/useTelegramContact';
 import type { Collection, Product } from '../types';
 import { logger } from '../utils/logger';
 
@@ -17,9 +18,16 @@ const extractSizes = (items: Product[]): string[] => {
   return Array.from(set).sort();
 };
 
-const HomePage = ({ onNavigateToUsers }: { onNavigateToUsers?: () => void }) => {
+const HomePage = ({ 
+  onNavigateToUsers, 
+  onNavigateToChats 
+}: { 
+  onNavigateToUsers?: () => void;
+  onNavigateToChats?: () => void;
+}) => {
   const user = useTelegramUser();
   const isAdmin = useIsAdmin();
+  const { showContactButton, hideContactButton } = useTelegramContact();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<string>();
   const [products, setProducts] = useState<Product[]>([]);
@@ -78,11 +86,15 @@ const HomePage = ({ onNavigateToUsers }: { onNavigateToUsers?: () => void }) => 
 
   const availableSizes = useMemo(() => extractSizes(products), [products]);
 
-  const handleContact = (product: Product) => {
-    if (!window.Telegram?.WebApp) return;
+  // Скрываем кнопку при изменении выбранной коллекции или товаров
+  useEffect(() => {
+    if (!selectedCollection) {
+      hideContactButton();
+    }
+  }, [selectedCollection, hideContactButton]);
 
-    window.Telegram.WebApp.MainButton.text = `Написать про ${product.title}`;
-    window.Telegram.WebApp.MainButton.show();
+  const handleContact = (product: Product) => {
+    showContactButton(product);
   };
 
   const selectedCollectionData = collections.find(
@@ -134,28 +146,55 @@ const HomePage = ({ onNavigateToUsers }: { onNavigateToUsers?: () => void }) => 
         ) : (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
             <h1>Коллекции</h1>
-            {isAdmin && onNavigateToUsers && (
-              <button
-                onClick={onNavigateToUsers}
-                style={{
-                  padding: '8px 16px',
-                  background: 'var(--tg-theme-button-color, #0f62fe)',
-                  color: 'var(--tg-theme-button-text-color, #fff)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  transition: 'opacity 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = '0.9';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = '1';
-                }}
-              >
-                👥 Пользователи
-              </button>
+            {isAdmin && (onNavigateToUsers || onNavigateToChats) && (
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {onNavigateToChats && (
+                  <button
+                    onClick={onNavigateToChats}
+                    style={{
+                      padding: '8px 16px',
+                      background: 'var(--tg-theme-button-color, #0f62fe)',
+                      color: 'var(--tg-theme-button-text-color, #fff)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      transition: 'opacity 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '0.9';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                    }}
+                  >
+                    💬 Чаты
+                  </button>
+                )}
+                {onNavigateToUsers && (
+                  <button
+                    onClick={onNavigateToUsers}
+                    style={{
+                      padding: '8px 16px',
+                      background: 'var(--tg-theme-button-color, #0f62fe)',
+                      color: 'var(--tg-theme-button-text-color, #fff)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      transition: 'opacity 0.2s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '0.9';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                    }}
+                  >
+                    👥 Пользователи
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}

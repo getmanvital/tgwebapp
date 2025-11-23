@@ -6,6 +6,7 @@ import pino from 'pino';
 import productsRouter from './routes/products.js';
 import syncRouter from './routes/sync.js';
 import authRouter from './routes/auth.js';
+import messagesRouter from './routes/messages.js';
 import { PHOTOS_DIR } from './database/schema.js';
 
 const app = express();
@@ -70,6 +71,7 @@ app.get('/health', (_req: Request, res: Response) => {
 app.use('/auth', authRouter);
 app.use('/products', productsRouter);
 app.use('/sync', syncRouter);
+app.use('/messages', messagesRouter);
 
 app.listen(PORT, () => {
   logger.info({ PORT }, 'Backend service started');

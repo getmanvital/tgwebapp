@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
 import HomePage from './pages/HomePage';
 import UsersPage from './pages/UsersPage';
+import ChatsPage from './pages/ChatsPage';
 import { useTelegram } from './hooks/useTelegram';
 import { useTelegramTheme } from './hooks/useTelegramTheme';
 import { useTelegramUser } from './hooks/useTelegramUser';
 import { saveUser } from './services/api';
 import { logger } from './utils/logger';
 
-type Page = 'home' | 'users';
+type Page = 'home' | 'users' | 'chats';
 
 function App() {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [usersPageKey, setUsersPageKey] = useState(0);
+  const [chatsPageKey, setChatsPageKey] = useState(0);
   const user = useTelegramUser();
   
   useTelegram();
@@ -103,14 +105,26 @@ function App() {
     setUsersPageKey(prev => prev + 1); // Принудительно перемонтируем компонент для обновления данных
   };
 
+  const handleNavigateToChats = () => {
+    logger.info('[App] Navigating to Chats page');
+    setCurrentPage('chats');
+    setChatsPageKey(prev => prev + 1);
+  };
+
   const handleNavigateToHome = () => {
     setCurrentPage('home');
   };
 
   return (
     <>
-      {currentPage === 'home' && <HomePage onNavigateToUsers={handleNavigateToUsers} />}
+      {currentPage === 'home' && (
+        <HomePage
+          onNavigateToUsers={handleNavigateToUsers}
+          onNavigateToChats={handleNavigateToChats}
+        />
+      )}
       {currentPage === 'users' && <UsersPage key={usersPageKey} onBack={handleNavigateToHome} />}
+      {currentPage === 'chats' && <ChatsPage key={chatsPageKey} onBack={handleNavigateToHome} />}
     </>
   );
 }
