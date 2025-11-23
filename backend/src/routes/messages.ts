@@ -180,6 +180,16 @@ router.post('/contact', async (req: Request, res: Response) => {
     // Получаем информацию о товаре
     const product = await productsQueries.getById(productId);
     
+    // Проверяем существование товара в БД
+    const productExists = !!product;
+    if (!productExists) {
+      logger.warn({
+        userId,
+        productId,
+        productTitle,
+      }, 'Product not found in database, will save message without product_id');
+    }
+    
     // Получаем фото товара
     let photoUrl: string | null = null;
     const localPhotoPath = getPhotoPath(productId, 'thumb');
@@ -254,10 +264,11 @@ router.post('/contact', async (req: Request, res: Response) => {
     }
 
     // Сохраняем сообщение в БД
+    // Используем product_id только если товар существует в БД, иначе null
     const now = Date.now();
     const messageId = await messagesQueries.insert(
       userId,
-      productId,
+      productExists ? productId : null, // Сохраняем product_id только если товар существует
       'user_to_manager',
       telegramMessageId,
       caption.replace(/<[^>]*>/g, ''), // Убираем HTML теги для хранения
@@ -305,7 +316,10 @@ router.get('/chats', async (req: Request, res: Response) => {
 
     logger.info('Fetching active chats');
     const chats = await messagesQueries.getActiveChats();
-    logger.info({ count: chats?.length || 0 }, 'Active chats fetched');
+    logger.info({ 
+      count: chats?.length || 0,
+      chats: chats?.slice(0, 3), // Логируем первые 3 чата для отладки
+    }, 'Active chats fetched');
 
     // Форматируем данные
     const formattedChats = chats.map((chat: any) => ({
