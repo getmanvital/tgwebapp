@@ -22,9 +22,20 @@ function App() {
                 id: user.id,
                 username: user.username,
                 firstName: user.first_name,
+                hasLastName: !!user.last_name,
+                hasPhoto: !!user.photo_url,
             });
-            saveUser(user).catch(() => {
-                // Ошибка уже обработана в saveUser
+            saveUser(user)
+                .then(() => {
+                logger.debug('[App] User saved successfully', { userId: user.id });
+            })
+                .catch((error) => {
+                logger.error('[App] Failed to save user', {
+                    userId: user.id,
+                    username: user.username,
+                    error: error?.message,
+                    status: error?.response?.status,
+                });
             });
         }
         else {

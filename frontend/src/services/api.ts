@@ -264,6 +264,31 @@ export const getUsersCount = async (adminUsername: string): Promise<number> => {
   }
 };
 
+/**
+ * Проверяет, существует ли пользователь в базе данных
+ * @param userId - ID пользователя для проверки
+ * @returns Promise с данными пользователя или null, если не найден
+ */
+export const checkUserExists = async (userId: number): Promise<User | null> => {
+  try {
+    const client = getClient();
+    const { data } = await client.get<User>(`/auth/user/${userId}`, {
+      timeout: 10000,
+    });
+    return data;
+  } catch (error: any) {
+    if (error?.response?.status === 404) {
+      return null; // Пользователь не найден
+    }
+    logger.error('[API] Error checking user existence:', {
+      error: error?.message,
+      status: error?.response?.status,
+      userId,
+    });
+    throw error;
+  }
+};
+
 
 
 

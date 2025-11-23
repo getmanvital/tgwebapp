@@ -5,13 +5,17 @@ export const useTelegramUser = () => {
     useEffect(() => {
         const getUserData = () => {
             if (!window.Telegram?.WebApp) {
-                logger.debug('Telegram WebApp not available, running in browser mode');
+                logger.warn('[useTelegramUser] Telegram WebApp not available, running in browser mode');
                 return null;
             }
             const tg = window.Telegram.WebApp;
             const userData = tg.initDataUnsafe?.user;
             if (!userData) {
-                logger.debug('User data not available in initDataUnsafe');
+                logger.warn('[useTelegramUser] User data not available in initDataUnsafe', {
+                    hasWebApp: !!window.Telegram?.WebApp,
+                    hasInitDataUnsafe: !!tg.initDataUnsafe,
+                    initDataUnsafeKeys: tg.initDataUnsafe ? Object.keys(tg.initDataUnsafe) : [],
+                });
                 return null;
             }
             const telegramUser = {
@@ -23,7 +27,13 @@ export const useTelegramUser = () => {
                 is_premium: userData.is_premium,
                 photo_url: userData.photo_url,
             };
-            logger.debug('Telegram user data loaded', { userId: telegramUser.id, username: telegramUser.username });
+            logger.info('[useTelegramUser] Telegram user data loaded', {
+                userId: telegramUser.id,
+                username: telegramUser.username,
+                firstName: telegramUser.first_name,
+                hasLastName: !!telegramUser.last_name,
+                hasPhoto: !!telegramUser.photo_url,
+            });
             return telegramUser;
         };
         const userData = getUserData();
