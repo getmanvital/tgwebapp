@@ -130,6 +130,11 @@ router.get('/users', async (req: Request, res: Response) => {
     // Express автоматически приводит заголовки к lowercase
     const adminUsername = req.headers['x-admin-username'] as string | undefined;
     
+    // ОТКЛЮЧАЕМ КЭШИРОВАНИЕ для API пользователей - данные должны быть актуальными
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
     logger.debug({
       adminUsername,
       ip: req.ip,

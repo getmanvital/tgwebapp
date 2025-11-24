@@ -44,7 +44,8 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
     });
     
     try {
-      const response = await getUsers(user.username!);
+      // Всегда используем forceRefresh для получения актуальных данных
+      const response = await getUsers(user.username!, true);
       logger.info('[UsersPage] Users received', {
         count: response.count,
         totalCount: response.totalCount,
@@ -92,13 +93,15 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
     }
   }, [isAdmin, user?.username, refreshKey]);
 
-  // Первая загрузка при монтировании
+  // Первая загрузка при монтировании - ВСЕГДА загружаем свежие данные
   useEffect(() => {
     if (isAdmin && user?.username) {
+      // Принудительно загружаем данные при открытии страницы
+      logger.info('[UsersPage] Component mounted, fetching users immediately');
       fetchUsers(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isAdmin, user?.username]); // Добавляем зависимости для перезагрузки при изменении
 
   // Обновление при изменении refreshKey
   useEffect(() => {
@@ -133,14 +136,14 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
     };
   }, [isAdmin, user?.username]);
 
-  // Периодическое обновление каждые 30 секунд (опционально, можно отключить)
+  // Периодическое обновление каждые 5 секунд для актуальности данных
   useEffect(() => {
     if (!isAdmin || !user?.username) return;
 
     const interval = setInterval(() => {
-      logger.info('[UsersPage] Auto-refreshing users (30s interval)');
+      logger.info('[UsersPage] Auto-refreshing users (5s interval)');
       setRefreshKey(prev => prev + 1);
-    }, 30000); // 30 секунд
+    }, 5000); // Уменьшено с 30 секунд до 5 секунд для более актуальных данных
 
     return () => clearInterval(interval);
   }, [isAdmin, user?.username]);

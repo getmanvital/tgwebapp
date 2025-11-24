@@ -190,7 +190,7 @@ const normalizeUsername = (username: string): string => {
   return username.startsWith('@') ? username.slice(1) : username;
 };
 
-export const getUsers = async (adminUsername: string): Promise<UsersResponse> => {
+export const getUsers = async (adminUsername: string, forceRefresh = false): Promise<UsersResponse> => {
   try {
     if (!adminUsername) {
       throw new Error('Admin username is required');
@@ -202,8 +202,15 @@ export const getUsers = async (adminUsername: string): Promise<UsersResponse> =>
     const client = getClient();
     logger.debug('[API] Fetching users with admin username:', { original: adminUsername, normalized: normalizedUsername });
     
+    // Добавляем timestamp для обхода кэша при необходимости
+    const params: any = {};
+    if (forceRefresh) {
+      params._t = Date.now();
+    }
+    
     logger.debug('[API] Making request to /auth/users', {
       normalizedUsername,
+      forceRefresh,
       headers: {
         'X-Admin-Username': normalizedUsername,
       },
@@ -213,6 +220,7 @@ export const getUsers = async (adminUsername: string): Promise<UsersResponse> =>
       headers: {
         'X-Admin-Username': normalizedUsername,
       },
+      params, // Добавляем параметры для обхода кэша
       timeout: 15000,
     });
     
