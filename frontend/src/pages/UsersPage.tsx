@@ -103,50 +103,13 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, user?.username]); // Добавляем зависимости для перезагрузки при изменении
 
-  // Обновление при изменении refreshKey
+  // Обновление при изменении refreshKey (используется кнопкой "Обновить")
   useEffect(() => {
     if (isAdmin && user?.username && refreshKey > 0) {
       fetchUsers(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey]);
-
-  // Автоматическое обновление при фокусе на странице (когда пользователь возвращается на вкладку)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && isAdmin && user?.username) {
-        logger.info('[UsersPage] Page became visible, refreshing users');
-        setRefreshKey(prev => prev + 1);
-      }
-    };
-
-    const handleFocus = () => {
-      if (isAdmin && user?.username) {
-        logger.info('[UsersPage] Window focused, refreshing users');
-        setRefreshKey(prev => prev + 1);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [isAdmin, user?.username]);
-
-  // Периодическое обновление каждые 5 секунд для актуальности данных
-  useEffect(() => {
-    if (!isAdmin || !user?.username) return;
-
-    const interval = setInterval(() => {
-      logger.info('[UsersPage] Auto-refreshing users (5s interval)');
-      setRefreshKey(prev => prev + 1);
-    }, 5000); // Уменьшено с 30 секунд до 5 секунд для более актуальных данных
-
-    return () => clearInterval(interval);
-  }, [isAdmin, user?.username]);
 
   const handleDeleteAllUsers = async () => {
     if (!user?.username) {
