@@ -13,17 +13,17 @@ RUN npm install -g pm2
 RUN groupadd --gid 2000 app && \
     useradd --uid 2000 --gid 2000 -m -s /bin/bash app
 
-# Установка рабочей директории
-WORKDIR /app
+# Установка рабочей директории в backend
+WORKDIR /app/backend
 
-# Копирование только package.json и package-lock.json из backend для лучшего кэширования
+# Копирование только package.json и package-lock.json для лучшего кэширования слоев Docker
 COPY backend/package*.json ./
 
 # Установка всех зависимостей (включая dev для сборки TypeScript)
 RUN npm ci && \
     npm cache clean --force
 
-# Копирование остальных файлов backend
+# Копирование остальных файлов backend (исключая node_modules благодаря .dockerignore)
 COPY backend/ ./
 
 # Сборка TypeScript проекта
@@ -34,7 +34,7 @@ RUN npm prune --production && \
     npm cache clean --force
 
 # Создание директорий для данных и логов
-RUN mkdir -p /app/data/photos /app/logs && \
+RUN mkdir -p /app/backend/data/photos /app/backend/logs && \
     chown -R app:app /app
 
 # Переключение на пользователя app
@@ -46,6 +46,9 @@ EXPOSE 3000
 # Установка переменных окружения по умолчанию
 ENV NODE_ENV=production
 ENV PORT=3000
+
+# Убеждаемся, что мы в правильной директории для запуска
+WORKDIR /app/backend
 
 # Команда запуска
 CMD ["node", "dist/server.js"]
