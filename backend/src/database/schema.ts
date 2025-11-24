@@ -18,11 +18,12 @@ const getDatabaseUrl = (): string => {
     return process.env.DATABASE_URL;
   }
   
-  const host = process.env.DB_HOST || 'localhost';
-  const port = process.env.DB_PORT || '5432';
-  const database = process.env.DB_NAME || 'tgwebapp';
-  const user = process.env.DB_USER || 'postgres';
-  const password = process.env.DB_PASSWORD || '';
+  // Поддержка переменных Timeweb Cloud (POSTGRESQL_*) и стандартных (DB_*)
+  const host = process.env.POSTGRESQL_HOST || process.env.DB_HOST || 'localhost';
+  const port = process.env.POSTGRESQL_PORT || process.env.DB_PORT || '5432';
+  const database = process.env.POSTGRESQL_DBNAME || process.env.DB_NAME || 'tgwebapp';
+  const user = process.env.POSTGRESQL_USER || process.env.DB_USER || 'postgres';
+  const password = process.env.POSTGRESQL_PASSWORD || process.env.DB_PASSWORD || '';
   
   return `postgresql://${user}:${password}@${host}:${port}/${database}`;
 };
