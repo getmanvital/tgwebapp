@@ -314,6 +314,11 @@ router.get('/chats', async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Forbidden: Admin access required' });
     }
 
+    // ОТКЛЮЧАЕМ КЭШИРОВАНИЕ для API чатов - данные должны быть актуальными
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     logger.info('Fetching active chats');
     const chats = await messagesQueries.getActiveChats();
     logger.info({ 
@@ -366,6 +371,11 @@ router.get('/chats/:userId', async (req: Request, res: Response) => {
     if (isNaN(userId)) {
       return res.status(400).json({ error: 'Invalid user ID' });
     }
+
+    // ОТКЛЮЧАЕМ КЭШИРОВАНИЕ для API истории чата - данные должны быть актуальными
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
 
     // Получаем историю сообщений
     const messages = await messagesQueries.getByUserId(userId);
