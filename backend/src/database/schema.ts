@@ -11,26 +11,108 @@ if (!fs.existsSync(PHOTOS_DIR)) {
 
 export { PHOTOS_DIR };
 
-// Создаем Pool для подключения к PostgreSQL
-const getDatabaseUrl = (): string => {
-  // Используем DATABASE_URL если есть, иначе собираем из отдельных переменных
-  if (process.env.DATABASE_URL) {
-    return process.env.DATABASE_URL;
-  }
+// Проверка, является ли IP адрес приватным
+const isPrivateIP = (host: string): boolean => {
+  if (!host || host === 'localhost') return true;
   
-  // Поддержка переменных Timeweb Cloud (POSTGRESQL_*) и стандартных (DB_*)
-  const host = process.env.POSTGRESQL_HOST || process.env.DB_HOST || 'localhost';
-  const port = process.env.POSTGRESQL_PORT || process.env.DB_PORT || '5432';
-  const database = process.env.POSTGRESQL_DBNAME || process.env.DB_NAME || 'tgwebapp';
-  const user = process.env.POSTGRESQL_USER || process.env.DB_USER || 'postgres';
-  const password = process.env.POSTGRESQL_PASSWORD || process.env.DB_PASSWORD || '';
+  // Проверка IPv4 приватных диапазонов
+  const privateRanges = [
+    /^192\.168\./,           // 192.168.0.0/16
+    /^10\./,                 // 10.0.0.0/8
+    /^172\.(1[6-9]|2[0-9]|3[0-1])\./, // 172.16.0.0/12
+    /^127\./,                // 127.0.0.0/8 (loopback)
+  ];
   
-  return `postgresql://${user}:${password}@${host}:${port}/${database}`;
+  return privateRanges.some(range => range.test(host));
 };
 
+// Создаем Pool для подключения к PostgreSQL
+const getDatabaseUrl = (): { url: string; host: string; source: string } => {
+  // ПРИОРИТЕТ 1: Проверяем явно указанные переменные POSTGRESQL_* или DB_*
+  const host = process.env.POSTGRESQL_HOST || process.env.DB_HOST;
+  
+  if (host) {
+    // Используем явно указанный хост (приватный IP имеет приоритет)
+    const port = process.env.POSTGRESQL_PORT || process.env.DB_PORT || '5432';
+    const database = process.env.POSTGRESQL_DBNAME || process.env.DB_NAME || 'tgwebapp';
+    const user = process.env.POSTGRESQL_USER || process.env.DB_USER || 'postgres';
+    const password = process.env.POSTGRESQL_PASSWORD || process.env.DB_PASSWORD || '';
+    
+    const url = `postgresql://${user}:${password}@${host}:${port}/${database}`;
+    const source = process.env.POSTGRESQL_HOST ? 'POSTGRESQL_HOST' : 'DB_HOST';
+    
+    return { url, host, source };
+  }
+  
+  // ПРИОРИТЕТ 2: Используем DATABASE_URL если отдельные переменные не установлены
+  if (process.env.DATABASE_URL) {
+    // Парсим host из DATABASE_URL для определения приватности
+    try {
+      const urlObj = new URL(process.env.DATABASE_URL);
+      return { 
+        url: process.env.DATABASE_URL, 
+        host: urlObj.hostname, 
+        source: 'DATABASE_URL' 
+      };
+    } catch {
+      return { 
+        url: process.env.DATABASE_URL, 
+        host: 'unknown', 
+        source: 'DATABASE_URL' 
+      };
+    }
+  }
+  
+  // ПРИОРИТЕТ 3: Fallback на localhost
+  return { 
+    url: 'postgresql://postgres@localhost:5432/tgwebapp', 
+    host: 'localhost', 
+    source: 'default' 
+  };
+};
+
+// Получаем конфигурацию подключения
+const dbConfig = getDatabaseUrl();
+
+// Определяем настройки SSL
+const getSSLConfig = (): boolean | object => {
+  // ПРИОРИТЕТ 1: Явное указание через переменную DB_SSL
+  if (process.env.DB_SSL !== undefined) {
+    const dbSsl = process.env.DB_SSL.toLowerCase();
+    if (dbSsl === 'true' || dbSsl === '1') {
+      return { rejectUnauthorized: false };
+    }
+    if (dbSsl === 'false' || dbSsl === '0') {
+      return false;
+    }
+  }
+  
+  // ПРИОРИТЕТ 2: Автоматическое отключение SSL для приватных IP
+  if (isPrivateIP(dbConfig.host)) {
+    return false;
+  }
+  
+  // ПРИОРИТЕТ 3: SSL для публичных IP в production
+  if (process.env.NODE_ENV === 'production') {
+    return { rejectUnauthorized: false };
+  }
+  
+  // По умолчанию SSL отключен
+  return false;
+};
+
+// Логирование конфигурации подключения для отладки
+console.log('[Database] Connection config:', {
+  host: dbConfig.host,
+  source: dbConfig.source,
+  ssl: getSSLConfig() !== false ? 'enabled' : 'disabled',
+  isPrivateIP: isPrivateIP(dbConfig.host),
+  nodeEnv: process.env.NODE_ENV,
+});
+
 export const pool = new Pool({
-  connectionString: getDatabaseUrl(),
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  connectionString: dbConfig.url,
+  ssl: getSSLConfig(),
 });
 
 // Инициализация базы данных
