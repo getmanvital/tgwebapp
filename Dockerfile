@@ -13,17 +13,35 @@ RUN npm install -g pm2
 RUN groupadd --gid 2000 app && \
     useradd --uid 2000 --gid 2000 -m -s /bin/bash app
 
-# Установка рабочей директории в backend
-WORKDIR /app/backend
+# === СБОРКА FRONTEND ===
+WORKDIR /app/frontend
 
-# Копирование только package.json и package-lock.json для лучшего кэширования слоев Docker
-COPY backend/package*.json ./
+# Копирование package.json для фронтенда
+COPY frontend/package*.json ./
 
-# Установка всех зависимостей (включая dev для сборки TypeScript)
+# Установка зависимостей фронтенда
 RUN npm ci && \
     npm cache clean --force
 
-# Копирование остальных файлов backend (исключая node_modules благодаря .dockerignore)
+# Копирование исходников фронтенда
+COPY frontend/ ./
+
+# Сборка фронтенда (VITE_BACKEND_URL будет установлена в runtime через переменные окружения)
+# Если переменная не установлена, используем относительный путь или текущий домен
+RUN npm run build && \
+    npm cache clean --force
+
+# === СБОРКА BACKEND ===
+WORKDIR /app/backend
+
+# Копирование package.json для бэкенда
+COPY backend/package*.json ./
+
+# Установка зависимостей бэкенда (включая dev для сборки TypeScript)
+RUN npm ci && \
+    npm cache clean --force
+
+# Копирование остальных файлов backend
 COPY backend/ ./
 
 # Сборка TypeScript проекта

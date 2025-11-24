@@ -9,7 +9,6 @@ README.md
 .env.*.local
 *.log
 .DS_Store
-frontend/
 docs/
 scripts/
 ecosystem.config.js
@@ -17,4 +16,8 @@ backend/node_modules
 backend/dist
 backend/data/photos
 backend/*.log
+frontend/node_modules
+frontend/dist
+frontend/*.log
+
 

@@ -172,27 +172,27 @@ const HomePage = ({
                   </button>
                 )}
                 {onNavigateToUsers && (
-                  <button
-                    onClick={onNavigateToUsers}
-                    style={{
-                      padding: '8px 16px',
-                      background: 'var(--tg-theme-button-color, #0f62fe)',
-                      color: 'var(--tg-theme-button-text-color, #fff)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      transition: 'opacity 0.2s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.opacity = '0.9';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.opacity = '1';
-                    }}
-                  >
-                    👥 Пользователи
-                  </button>
+              <button
+                onClick={onNavigateToUsers}
+                style={{
+                  padding: '8px 16px',
+                  background: 'var(--tg-theme-button-color, #0f62fe)',
+                  color: 'var(--tg-theme-button-text-color, #fff)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '0.9';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '1';
+                }}
+              >
+                👥 Пользователи
+              </button>
                 )}
               </div>
             )}
