@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from 'express';
-import { usersQueries } from '../database/schema.js';
+import { usersQueries, pool } from '../database/schema.js';
 import pino from 'pino';
 
 const router = Router();
@@ -152,14 +152,32 @@ router.get('/users', async (req: Request, res: Response) => {
     const totalCount = await usersQueries.count();
     logger.debug({ totalCount }, 'User count retrieved');
     
+    // Дополнительная проверка: запрос без ORDER BY для диагностики
+    const testQuery = await pool.query(`SELECT COUNT(*) as count FROM users`);
+    logger.debug({ 
+      directCount: parseInt(testQuery.rows[0].count, 10),
+      totalCountFromQuery: totalCount 
+    }, 'Direct count query result');
+    
     logger.debug({ adminUsername }, 'Fetching all users from database');
     const users = await usersQueries.getAll();
+    
+    // Проверка с простым SELECT без ORDER BY для диагностики
+    const usersWithoutOrder = await pool.query(`SELECT * FROM users LIMIT 10`);
+    logger.debug({ 
+      usersWithoutOrderCount: usersWithoutOrder.rows.length,
+      usersWithOrderCount: users.length,
+      totalCount: totalCount
+    }, 'Comparison: with and without ORDER BY');
+    
     logger.debug({ 
       rawUsersCount: users.length,
-      rawUsers: users.map(u => ({
+      rawUsers: users.slice(0, 3).map(u => ({
         id: u.id,
         username: u.username,
         first_name: u.first_name,
+        last_seen_at: u.last_seen_at,
+        last_seen_at_type: typeof u.last_seen_at,
         idType: typeof u.id,
       })),
     }, 'Raw users from database');

@@ -389,7 +389,12 @@ export const usersQueries = {
   },
   
   getAll: async (): Promise<any[]> => {
-    const result = await pool.query(`SELECT * FROM users ORDER BY last_seen_at DESC`);
+    // Используем COALESCE для обработки NULL значений в last_seen_at
+    // Если last_seen_at NULL, используем first_seen_at, если и он NULL - используем 0
+    const result = await pool.query(`
+      SELECT * FROM users 
+      ORDER BY COALESCE(last_seen_at, first_seen_at, 0) DESC, id DESC
+    `);
     return result.rows;
   },
   
