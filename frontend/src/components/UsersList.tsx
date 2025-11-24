@@ -32,6 +32,8 @@ const UsersList = ({ users, loading }: Props) => {
                 src={user.photo_url} 
                 alt={`${user.first_name} ${user.last_name || ''}`.trim()}
                 className="user-card__avatar"
+                loading="lazy"
+                decoding="async"
               />
             ) : (
               <div className="user-card__avatar user-card__avatar--placeholder">

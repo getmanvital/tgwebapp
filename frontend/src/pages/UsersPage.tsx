@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import UsersList from '../components/UsersList';
 import { getUsers, deleteAllUsers } from '../services/api';
 import { useTelegramUser } from '../hooks/useTelegramUser';
@@ -12,17 +12,29 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const hasUsersRef = useRef(false);
 
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = useCallback(async (isRefresh = false) => {
     if (!isAdmin || !user?.username) {
       setError('Доступ запрещен. Только администратор может просматривать пользователей.');
+      setInitialLoading(false);
       return;
     }
 
-    setLoading(true);
+    // Разделяем состояние для первой загрузки и обновления
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+      if (!hasUsersRef.current) {
+        setInitialLoading(true);
+      }
+    }
     setError(null);
     
     logger.info('[UsersPage] Fetching users', {
@@ -40,13 +52,18 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
         firstUserId: response.users?.[0]?.id,
       });
       
-      setUsers(response.users || []);
+      // Обновляем данные сразу, чтобы пользователи видели их без задержки
+      const newUsers = response.users || [];
+      setUsers(newUsers);
       setTotalCount(response.totalCount ?? response.count ?? 0);
+      hasUsersRef.current = newUsers.length > 0;
+      setInitialLoading(false);
       
       if (!response.users || response.users.length === 0) {
         logger.warn('[UsersPage] No users in response', { response });
       }
     } catch (err: any) {
+      setInitialLoading(false);
       logger.error('[UsersPage] Error loading users:', {
         error: err,
         message: err?.message,
@@ -71,12 +88,25 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
       }
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [isAdmin, user?.username, refreshKey]);
 
+  // Первая загрузка при монтировании
   useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    if (isAdmin && user?.username) {
+      fetchUsers(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Обновление при изменении refreshKey
+  useEffect(() => {
+    if (isAdmin && user?.username && refreshKey > 0) {
+      fetchUsers(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey]);
 
   // Автоматическое обновление при фокусе на странице (когда пользователь возвращается на вкладку)
   useEffect(() => {
@@ -189,10 +219,9 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
           <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <button
               onClick={() => {
-                setRefreshKey(prev => prev + 1);
-                fetchUsers();
+                fetchUsers(true);
               }}
-              disabled={loading || deleting}
+              disabled={refreshing || deleting}
               style={{
                 padding: '8px 16px',
                 backgroundColor: 'var(--tg-theme-button-color, #3390ec)',
@@ -206,12 +235,12 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
                 transition: 'opacity 0.2s',
               }}
             >
-              {loading ? 'Загрузка...' : '🔄 Обновить'}
+              {refreshing ? 'Загрузка...' : '🔄 Обновить'}
             </button>
             {totalCount !== null && totalCount > 0 && (
               <button
                 onClick={handleDeleteAllUsers}
-                disabled={deleting || loading}
+                disabled={deleting || refreshing}
                 style={{
                   padding: '8px 16px',
                   backgroundColor: 'var(--tg-theme-destructive-text-color, #d7263d)',
@@ -239,8 +268,25 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
       )}
 
       {!error && (
-        <div style={{ marginTop: '16px' }}>
-          <UsersList users={users} loading={loading} />
+        <div style={{ marginTop: '16px', position: 'relative' }}>
+          {refreshing && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 10,
+              background: 'var(--tg-theme-bg-color, #fff)',
+              padding: '8px',
+              textAlign: 'center',
+              fontSize: '14px',
+              color: 'var(--tg-theme-hint-color, #999)',
+              borderBottom: '1px solid var(--tg-theme-hint-color, #eee)',
+            }}>
+              🔄 Обновление...
+            </div>
+          )}
+          <UsersList users={users} loading={initialLoading} />
         </div>
       )}
     </main>
