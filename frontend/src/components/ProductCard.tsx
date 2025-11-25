@@ -222,9 +222,9 @@ const ProductCard = ({ product, onContact }: Props) => {
             aria-label="Добавить в корзину"
           >
             {isInCart(product.id) ? (
-              <CheckIcon sx={{ fontSize: 28 }} />
+              <CheckIcon style={{ fontSize: 28 }} />
             ) : (
-              <ShoppingCartIcon sx={{ fontSize: 28 }} />
+              <ShoppingCartIcon style={{ fontSize: 28 }} />
             )}
           </button>
         </div>

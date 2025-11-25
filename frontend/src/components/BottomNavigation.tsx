@@ -36,7 +36,7 @@ const BottomNavigation = ({ currentPage, onNavigate }: Props) => {
           )}
           aria-label="Главная"
         >
-          <HomeIcon sx={{ fontSize: 28 }} />
+          <HomeIcon style={{ fontSize: 28 }} />
         </button>
 
         <button
@@ -49,7 +49,7 @@ const BottomNavigation = ({ currentPage, onNavigate }: Props) => {
           )}
           aria-label="Корзина"
         >
-          <ShoppingCartIcon sx={{ fontSize: 28 }} />
+          <ShoppingCartIcon style={{ fontSize: 28 }} />
           {cartCount > 0 && (
             <span
               className={clsx(
@@ -74,7 +74,7 @@ const BottomNavigation = ({ currentPage, onNavigate }: Props) => {
           )}
           aria-label="Профиль"
         >
-          <PersonIcon sx={{ fontSize: 28 }} />
+          <PersonIcon style={{ fontSize: 28 }} />
         </button>
       </div>
     </nav>

@@ -44,7 +44,7 @@ export default defineConfig({
   },
   // Оптимизация зависимостей
   optimizeDeps: {
-    include: ['react', 'react-dom', '@telegram-apps/sdk', 'axios'],
+    include: ['react', 'react-dom', '@telegram-apps/sdk', 'axios', '@mui/icons-material', '@emotion/react'],
   },
 });
 
