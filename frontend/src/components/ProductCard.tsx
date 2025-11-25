@@ -210,7 +210,11 @@ const ProductCard = ({ product, onContact }: Props) => {
           />
         </div>
         <div className="flex flex-col gap-1.5 flex-1">
-          <h3 className="m-0 text-sm text-tg-text dark:text-white leading-tight w-full">{product.title}</h3>
+          {/* Первый ряд: название товара на всю ширину */}
+          <div className="w-full">
+            <h3 className="m-0 text-sm text-tg-text dark:text-white leading-tight">{product.title}</h3>
+          </div>
+          {/* Второй ряд: цена и кнопка корзины */}
           <div className="flex items-center justify-between mt-auto">
             <p className="font-semibold text-tg-text m-0 text-sm">{product.price?.text}</p>
             <button
