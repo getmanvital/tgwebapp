@@ -16,15 +16,15 @@ RUN groupadd --gid 2000 app && \
 # === СБОРКА FRONTEND ===
 WORKDIR /app/frontend
 
-# Копирование package.json для фронтенда
-COPY frontend/package*.json ./
+# Копирование package.json для фронтенда (с правильным владельцем)
+COPY --chown=app:app frontend/package*.json ./
 
 # Установка зависимостей фронтенда
 RUN npm ci && \
     npm cache clean --force
 
-# Копирование исходников фронтенда
-COPY frontend/ ./
+# Копирование исходников фронтенда (с правильным владельцем)
+COPY --chown=app:app frontend/ ./
 
 # Сборка фронтенда (VITE_BACKEND_URL будет установлена в runtime через переменные окружения)
 # Если переменная не установлена, используем относительный путь или текущий домен
@@ -34,15 +34,15 @@ RUN npm run build && \
 # === СБОРКА BACKEND ===
 WORKDIR /app/backend
 
-# Копирование package.json для бэкенда
-COPY backend/package*.json ./
+# Копирование package.json для бэкенда (с правильным владельцем)
+COPY --chown=app:app backend/package*.json ./
 
 # Установка зависимостей бэкенда (включая dev для сборки TypeScript)
 RUN npm ci && \
     npm cache clean --force
 
-# Копирование остальных файлов backend
-COPY backend/ ./
+# Копирование остальных файлов backend (с правильным владельцем)
+COPY --chown=app:app backend/ ./
 
 # Сборка TypeScript проекта
 RUN npm run build
@@ -51,9 +51,9 @@ RUN npm run build
 RUN npm prune --production && \
     npm cache clean --force
 
-# Создание директорий для данных и логов
+# Создание директорий для данных и логов (с правильным владельцем)
 RUN mkdir -p /app/backend/data/photos /app/backend/logs && \
-    chown -R app:app /app
+    chown -R app:app /app/backend/data /app/backend/logs
 
 # Переключение на пользователя app
 USER app

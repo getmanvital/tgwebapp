@@ -1,7 +1,7 @@
 import clsx from 'clsx';
-import HomeIcon from '@mui/icons-material/Home';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import PersonIcon from '@mui/icons-material/Person';
+import HomeIcon from './icons/HomeIcon';
+import ShoppingCartIcon from './icons/ShoppingCartIcon';
+import PersonIcon from './icons/PersonIcon';
 import { useCart } from '../contexts/CartContext';
 
 type Props = {

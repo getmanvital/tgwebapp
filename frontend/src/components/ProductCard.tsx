@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import clsx from 'clsx';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import CheckIcon from '@mui/icons-material/Check';
+import ShoppingCartIcon from './icons/ShoppingCartIcon';
+import CheckIcon from './icons/CheckIcon';
 import PhotoGallery from './PhotoGallery';
 import type { Product } from '../types';
 import { getProductPhotos } from '../services/api';
