@@ -209,14 +209,14 @@ const ProductCard = ({ product, onContact }: Props) => {
             }}
           />
         </div>
-        <div className="flex flex-col gap-1.5 flex-1 relative">
-          <h3 className="m-0 text-sm text-tg-text dark:text-white leading-tight pr-12">{product.title}</h3>
+        <div className="flex flex-col gap-1.5 flex-1">
+          <h3 className="m-0 text-sm text-tg-text dark:text-white leading-tight w-full">{product.title}</h3>
           <div className="flex items-center justify-between mt-auto">
             <p className="font-semibold text-tg-text m-0 text-sm">{product.price?.text}</p>
             <button
               onClick={handleAddToCart}
               className={clsx(
-                'min-w-[44px] min-h-[44px] p-2',
+                'min-w-[44px] min-h-[44px] p-2 flex-shrink-0',
                 'flex items-center justify-center',
                 'transition-all rounded-lg',
                 'z-10 animate-scale-in',
