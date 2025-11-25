@@ -2,13 +2,18 @@ import { useEffect, useState } from 'react';
 import HomePage from './pages/HomePage';
 import UsersPage from './pages/UsersPage';
 import ChatsPage from './pages/ChatsPage';
+import CartPage from './pages/CartPage';
+import ProfilePage from './pages/ProfilePage';
+import BottomNavigation from './components/BottomNavigation';
+import { CartProvider } from './contexts/CartContext';
+import { ToastProvider } from './contexts/ToastContext';
 import { useTelegram } from './hooks/useTelegram';
 import { useTelegramTheme } from './hooks/useTelegramTheme';
 import { useTelegramUser } from './hooks/useTelegramUser';
 import { saveUser } from './services/api';
 import { logger } from './utils/logger';
 
-type Page = 'home' | 'users' | 'chats';
+type Page = 'home' | 'cart' | 'profile' | 'users' | 'chats';
 
 function App() {
   const [isReady, setIsReady] = useState(false);
@@ -83,10 +88,20 @@ function App() {
     );
   }
 
+  const handleNavigate = (page: 'home' | 'cart' | 'profile') => {
+    if (page === 'home') {
+      setCurrentPage('home');
+    } else if (page === 'cart') {
+      setCurrentPage('cart');
+    } else if (page === 'profile') {
+      setCurrentPage('profile');
+    }
+  };
+
   const handleNavigateToUsers = () => {
     logger.info('[App] Navigating to Users page');
     setCurrentPage('users');
-    setUsersPageKey(prev => prev + 1); // Принудительно перемонтируем компонент для обновления данных
+    setUsersPageKey(prev => prev + 1);
   };
 
   const handleNavigateToChats = () => {
@@ -99,17 +114,41 @@ function App() {
     setCurrentPage('home');
   };
 
+  const handleNavigateToProfile = () => {
+    setCurrentPage('profile');
+  };
+
+  const getBottomNavPage = (): 'home' | 'cart' | 'profile' => {
+    if (currentPage === 'users' || currentPage === 'chats') {
+      return 'profile';
+    }
+    if (currentPage === 'cart') {
+      return 'cart';
+    }
+    return 'home';
+  };
+
   return (
-    <>
-      {currentPage === 'home' && (
-        <HomePage
-          onNavigateToUsers={handleNavigateToUsers}
-          onNavigateToChats={handleNavigateToChats}
-        />
-      )}
-      {currentPage === 'users' && <UsersPage key={usersPageKey} onBack={handleNavigateToHome} />}
-      {currentPage === 'chats' && <ChatsPage key={chatsPageKey} onBack={handleNavigateToHome} />}
-    </>
+    <CartProvider>
+      <ToastProvider>
+        <div className="min-h-screen bg-tg-bg animate-fade-in">
+          {currentPage === 'home' && <HomePage />}
+          {currentPage === 'cart' && <CartPage />}
+          {currentPage === 'profile' && (
+            <ProfilePage
+              onNavigateToUsers={handleNavigateToUsers}
+              onNavigateToChats={handleNavigateToChats}
+            />
+          )}
+          {currentPage === 'users' && <UsersPage key={usersPageKey} onBack={handleNavigateToProfile} />}
+          {currentPage === 'chats' && <ChatsPage key={chatsPageKey} onBack={handleNavigateToProfile} />}
+          
+          {(currentPage === 'home' || currentPage === 'cart' || currentPage === 'profile' || currentPage === 'users' || currentPage === 'chats') && (
+            <BottomNavigation currentPage={getBottomNavPage()} onNavigate={handleNavigate} />
+          )}
+        </div>
+      </ToastProvider>
+    </CartProvider>
   );
 }
 

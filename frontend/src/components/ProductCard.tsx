@@ -5,16 +5,20 @@ import type { Product } from '../types';
 import { getProductPhotos } from '../services/api';
 import { getBackendUrl } from '../utils/backendUrl';
 import { logger } from '../utils/logger';
+import { useCart } from '../contexts/CartContext';
+import { useToast } from '../contexts/ToastContext';
 
 type Props = {
   product: Product;
-  onContact: (product: Product) => void;
+  onContact?: (product: Product) => void;
 };
 
 const ProductCard = ({ product, onContact }: Props) => {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [fullPhotos, setFullPhotos] = useState<string[] | null>(null);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
+  const { addToCart, isInCart } = useCart();
+  const { showToast } = useToast();
 
   // Получаем только обложку для карточки товара
   const getThumbPhoto = (): string => {
@@ -178,9 +182,15 @@ const ProductCard = ({ product, onContact }: Props) => {
     }
   };
 
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addToCart(product);
+    showToast('Товар добавлен в корзину', 'success');
+  };
+
   return (
     <>
-      <article className="bg-tg-secondary-bg rounded-2xl p-3 flex flex-col gap-2 shadow-md transition-colors dark:bg-white/10 dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+      <article className="bg-tg-secondary-bg rounded-2xl p-3 flex flex-col gap-2 shadow-md transition-colors dark:bg-white/10 dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] min-h-[320px]">
         <div
           className={clsx(
             'relative w-full cursor-pointer rounded-xl overflow-hidden aspect-square',
@@ -195,21 +205,25 @@ const ProductCard = ({ product, onContact }: Props) => {
             decoding="async"
             className="w-full h-full object-cover block"
           />
-          {hasMultiplePhotos && (
-            <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded-lg text-xs font-medium z-10 dark:bg-white/20 dark:backdrop-blur-[10px]">
-              фото
-            </div>
-          )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <h3 className="m-0 text-tg-text dark:text-white">{product.title}</h3>
-          <p className="font-semibold text-tg-text m-0">{product.price?.text}</p>
-          <button 
-            onClick={() => onContact(product)}
-            className="border-none rounded-xl py-2.5 px-2.5 bg-tg-button text-tg-button-text transition-opacity hover:opacity-90"
+          <button
+            onClick={handleAddToCart}
+            className={clsx(
+              'absolute top-2 right-2 w-11 h-11 rounded-full',
+              'bg-tg-button text-tg-button-text',
+              'flex items-center justify-center',
+              'shadow-lg transition-all',
+              'hover:scale-110 active:scale-95',
+              'z-10',
+              isInCart(product.id) && 'bg-green-500'
+            )}
+            aria-label="Добавить в корзину"
           >
-            Написать менеджеру
+            <span className="text-xl">{isInCart(product.id) ? '✓' : '🛒'}</span>
           </button>
+        </div>
+        <div className="flex flex-col gap-2 flex-1">
+          <h3 className="m-0 text-tg-text dark:text-white line-clamp-2 min-h-[2.5rem]">{product.title}</h3>
+          <p className="font-semibold text-tg-text m-0 mt-auto">{product.price?.text}</p>
         </div>
       </article>
 

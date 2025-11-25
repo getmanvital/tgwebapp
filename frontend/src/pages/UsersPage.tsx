@@ -13,10 +13,8 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
   const hasUsersRef = useRef(false);
 
   const fetchUsers = useCallback(async (isRefresh = false) => {
@@ -26,21 +24,15 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
       return;
     }
 
-    // Разделяем состояние для первой загрузки и обновления
-    if (isRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-      if (!hasUsersRef.current) {
-        setInitialLoading(true);
-      }
+    setLoading(true);
+    if (!hasUsersRef.current) {
+      setInitialLoading(true);
     }
     setError(null);
     
     logger.info('[UsersPage] Fetching users', {
       isAdmin,
       username: user.username,
-      refreshKey,
     });
     
     try {
@@ -89,9 +81,8 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
       }
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
-  }, [isAdmin, user?.username, refreshKey]);
+  }, [isAdmin, user?.username]);
 
   // Первая загрузка при монтировании - ВСЕГДА загружаем свежие данные
   useEffect(() => {
@@ -103,13 +94,6 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, user?.username]); // Добавляем зависимости для перезагрузки при изменении
 
-  // Обновление при изменении refreshKey (используется кнопкой "Обновить")
-  useEffect(() => {
-    if (isAdmin && user?.username && refreshKey > 0) {
-      fetchUsers(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshKey]);
 
   const handleDeleteAllUsers = async () => {
     if (!user?.username) {
@@ -133,7 +117,7 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
       // Обновляем список пользователей после удаления
       setUsers([]);
       setTotalCount(0);
-      setRefreshKey(prev => prev + 1); // Принудительно обновляем список
+      fetchUsers(false); // Обновляем список
       
       // Показываем сообщение об успехе
       alert(`База данных очищена. Удалено пользователей: ${result.deletedCount}`);
@@ -178,20 +162,11 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
         </h1>
         {isAdmin && (
           <div className="mt-3 flex gap-2 flex-wrap">
-            <button
-              onClick={() => {
-                fetchUsers(true);
-              }}
-              disabled={refreshing || deleting}
-              className="px-4 py-2 bg-tg-button text-white border-none rounded-lg text-sm font-medium transition-opacity disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90"
-            >
-              {refreshing ? 'Загрузка...' : '🔄 Обновить'}
-            </button>
             {totalCount !== null && totalCount > 0 && (
               <button
                 onClick={handleDeleteAllUsers}
-                disabled={deleting || refreshing}
-                className="px-4 py-2 bg-tg-destructive-text text-white border-none rounded-lg text-sm font-medium transition-opacity disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90"
+                disabled={deleting}
+                className="px-4 py-2 bg-tg-destructive-text text-white border-none rounded-lg text-sm font-medium transition-opacity disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90 min-h-[44px]"
               >
                 {deleting ? 'Удаление...' : '🗑️ Очистить базу'}
               </button>
@@ -207,12 +182,7 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
       )}
 
       {!error && (
-        <div className="mt-4 relative">
-          {refreshing && (
-            <div className="absolute top-0 left-0 right-0 z-10 bg-tg-bg p-2 text-center text-sm text-tg-hint border-b border-tg-hint">
-              🔄 Обновление...
-            </div>
-          )}
+        <div className="mt-4">
           <UsersList users={users} loading={initialLoading} />
         </div>
       )}

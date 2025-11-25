@@ -1,49 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import CollectionCard from '../components/CollectionCard';
 import CollectionCardSkeleton from '../components/CollectionCardSkeleton';
-import FiltersBar from '../components/FiltersBar';
 import ProductCard from '../components/ProductCard';
 import ProductCardSkeleton from '../components/ProductCardSkeleton';
-import UserAuthStatus from '../components/UserAuthStatus';
 import { getCollections, getProducts } from '../services/api';
-import { useTelegramUser } from '../hooks/useTelegramUser';
-import { useIsAdmin } from '../hooks/useIsAdmin';
 import { useTelegramContact } from '../hooks/useTelegramContact';
 import type { Collection, Product } from '../types';
 import { logger } from '../utils/logger';
 
-const extractSizes = (items: Product[]): string[] => {
-  const set = new Set<string>();
-  items.forEach((item) => item.sizes?.forEach((size) => set.add(size)));
-  return Array.from(set).sort();
-};
-
-const HomePage = ({ 
-  onNavigateToUsers, 
-  onNavigateToChats 
-}: { 
-  onNavigateToUsers?: () => void;
-  onNavigateToChats?: () => void;
-}) => {
-  const user = useTelegramUser();
-  const isAdmin = useIsAdmin();
-  const { showContactButton, hideContactButton } = useTelegramContact();
+const HomePage = () => {
+  const { hideContactButton } = useTelegramContact();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<string>();
   const [products, setProducts] = useState<Product[]>([]);
-  const [query, setQuery] = useState('');
-  const [size, setSize] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
-  const [reloadKey, setReloadKey] = useState(0);
-
-  // Функция для принудительной перезагрузки всех данных
-  const forceReload = () => {
-    setReloadKey(prev => prev + 1);
-    setCollections([]);
-    setProducts([]);
-    setError(undefined);
-  };
 
   useEffect(() => {
     setLoading(true);
@@ -67,7 +38,7 @@ const HomePage = ({
         setCollections([]);
       })
       .finally(() => setLoading(false));
-  }, [reloadKey]);
+  }, []);
 
   useEffect(() => {
     if (!selectedCollection) return;
@@ -76,26 +47,18 @@ const HomePage = ({
     setError(undefined);
     getProducts({
       albumId: selectedCollection,
-      query,
-      size,
-    }, reloadKey > 0) // Принудительная перезагрузка только при явном обновлении
+    }, false)
       .then((data) => setProducts(data))
       .catch(() => setError('Ошибка загрузки товаров'))
       .finally(() => setLoading(false));
-  }, [selectedCollection, query, size, reloadKey]);
+  }, [selectedCollection]);
 
-  const availableSizes = useMemo(() => extractSizes(products), [products]);
-
-  // Скрываем кнопку при изменении выбранной коллекции или товаров
+  // Скрываем кнопку при изменении выбранной коллекции
   useEffect(() => {
     if (!selectedCollection) {
       hideContactButton();
     }
   }, [selectedCollection, hideContactButton]);
-
-  const handleContact = (product: Product) => {
-    showContactButton(product);
-  };
 
   const selectedCollectionData = collections.find(
     (c) => c.id.toString() === selectedCollection,
@@ -105,53 +68,9 @@ const HomePage = ({
     <main className="flex flex-col gap-4 w-full max-w-full box-border pb-[calc(72px+max(16px,env(safe-area-inset-bottom)))]">
       <header className="flex flex-col gap-3">
         {selectedCollection ? (
-          <>
-            <div className="flex items-center">
-              <button
-                className="border-none bg-transparent text-tg-link cursor-pointer py-2 px-0 text-sm font-medium flex items-center gap-1 transition-opacity hover:opacity-70"
-                onClick={() => {
-                  setSelectedCollection(undefined);
-                  setQuery('');
-                  setSize('');
-                }}
-              >
-                ← Назад к подборкам
-              </button>
-            </div>
-            <div className="flex justify-between items-center w-full">
-              <h1>{selectedCollectionData?.title || 'Товары'}</h1>
-              <button
-                onClick={forceReload}
-                className="px-4 py-2 bg-tg-button text-tg-button-text border-none rounded-lg cursor-pointer text-sm transition-opacity hover:opacity-90"
-              >
-                🔄 Обновить
-              </button>
-            </div>
-          </>
+          <h1>{selectedCollectionData?.title || 'Товары'}</h1>
         ) : (
-          <div className="flex justify-between items-center w-full">
-            <h1>Коллекции</h1>
-            {isAdmin && (onNavigateToUsers || onNavigateToChats) && (
-              <div className="flex gap-2">
-                {onNavigateToChats && (
-                  <button
-                    onClick={onNavigateToChats}
-                    className="px-4 py-2 bg-tg-button text-tg-button-text border-none rounded-lg cursor-pointer text-sm transition-opacity hover:opacity-90"
-                  >
-                    💬 Чаты
-                  </button>
-                )}
-                {onNavigateToUsers && (
-                  <button
-                    onClick={onNavigateToUsers}
-                    className="px-4 py-2 bg-tg-button text-tg-button-text border-none rounded-lg cursor-pointer text-sm transition-opacity hover:opacity-90"
-                  >
-                    👥 Пользователи
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
+          <h1>Коллекции</h1>
         )}
       </header>
 
@@ -186,14 +105,6 @@ const HomePage = ({
         </>
       ) : (
         <>
-          <FiltersBar
-            query={query}
-            size={size}
-            sizes={availableSizes}
-            onQueryChange={setQuery}
-            onSizeChange={setSize}
-          />
-
           {error && <p className="error">{error}</p>}
 
           {loading ? (
@@ -208,7 +119,7 @@ const HomePage = ({
               {products.length > 0 && (
                 <section className="grid grid-cols-2 gap-3">
                   {products.map((product) => (
-                    <ProductCard key={product.id} product={product} onContact={handleContact} />
+                    <ProductCard key={product.id} product={product} />
                   ))}
                 </section>
               )}
@@ -216,7 +127,6 @@ const HomePage = ({
           )}
         </>
       )}
-      <UserAuthStatus user={user} />
     </main>
   );
 };

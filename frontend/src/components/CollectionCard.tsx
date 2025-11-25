@@ -44,11 +44,6 @@ const CollectionCard = ({ collection, isActive, onClick }: Props) => {
           decoding="async"
           className="w-full h-full object-cover"
         />
-        {collection.count !== undefined && (
-          <span className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded-lg text-xs font-medium dark:bg-white/20 dark:backdrop-blur-[10px]">
-            {collection.count} товаров
-          </span>
-        )}
       </div>
       <h3 className="p-3 m-0 text-sm font-semibold text-center text-tg-text">
         {collection.title}

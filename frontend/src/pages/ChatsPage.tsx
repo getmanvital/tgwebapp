@@ -16,7 +16,6 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
   const [product, setProduct] = useState<{ id: number; title: string; price?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchChats = useCallback(async () => {
     if (!isAdmin || !user?.username) {
@@ -93,7 +92,7 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
     }, 3000);
 
     return () => clearInterval(chatsInterval);
-  }, [fetchChats, selectedUserId, refreshKey]);
+  }, [fetchChats, selectedUserId]);
 
   useEffect(() => {
     if (selectedUserId) {
@@ -138,7 +137,7 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
       setMessages((prev) => [...prev, newMessage]);
       
       // Обновляем список чатов
-      setRefreshKey((prev) => prev + 1);
+      fetchChats();
       
       // Обновляем историю для получения реального ID сообщения
       setTimeout(() => {
@@ -182,26 +181,14 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
                 ← Назад
               </button>
             </div>
-            <div className="flex justify-between items-center w-full">
-              <h1>
-                Чаты
-                {chats.length > 0 && (
-                  <span className="text-[0.7em] font-normal text-tg-hint ml-2">
-                    ({chats.length})
-                  </span>
-                )}
-              </h1>
-              <button
-                onClick={() => {
-                  setRefreshKey((prev) => prev + 1);
-                  fetchChats();
-                }}
-                disabled={loading}
-                className="px-4 py-2 bg-tg-button text-tg-button-text border-none rounded-lg text-sm transition-opacity disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90"
-              >
-                🔄 Обновить
-              </button>
-            </div>
+            <h1>
+              Чаты
+              {chats.length > 0 && (
+                <span className="text-[0.7em] font-normal text-tg-hint ml-2">
+                  ({chats.length})
+                </span>
+              )}
+            </h1>
           </>
         )}
       </header>

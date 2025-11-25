@@ -101,7 +101,11 @@ const PhotoGallery = ({ images, initialIndex, onClose, isLoading = false }: Prop
     >
       <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
         <button
-          className="absolute top-4 right-4 w-11 h-11 border-none bg-white/20 text-white text-[32px] leading-none rounded-full cursor-pointer z-[1001] flex items-center justify-center transition-colors hover:bg-white/30 md:top-2 md:right-2 md:w-10 md:h-10 md:text-[28px]"
+          className="absolute bottom-6 right-6 w-11 h-11 border-none bg-white/20 text-white text-[32px] leading-none rounded-full cursor-pointer z-[1001] flex items-center justify-center transition-colors hover:bg-white/30"
+          style={{
+            bottom: 'max(24px, calc(24px + env(safe-area-inset-bottom)))',
+            right: 'max(24px, calc(24px + env(safe-area-inset-right)))',
+          }}
           onClick={onClose}
           aria-label="Закрыть"
         >
