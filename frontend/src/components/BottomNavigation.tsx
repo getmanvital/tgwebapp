@@ -28,8 +28,8 @@ const BottomNavigation = ({ currentPage, onNavigate }: Props) => {
           className={clsx(
             'flex flex-col items-center justify-center gap-1 min-w-[44px] min-h-[44px] p-2 rounded-lg transition-colors',
             currentPage === 'home'
-              ? 'text-tg-button'
-              : 'text-tg-hint hover:text-tg-text'
+              ? 'text-tg-button font-semibold'
+              : 'text-tg-hint hover:text-tg-text font-medium'
           )}
           aria-label="Главная"
         >
@@ -42,8 +42,8 @@ const BottomNavigation = ({ currentPage, onNavigate }: Props) => {
           className={clsx(
             'relative flex flex-col items-center justify-center gap-1 min-w-[44px] min-h-[44px] p-2 rounded-lg transition-colors',
             currentPage === 'cart'
-              ? 'text-tg-button'
-              : 'text-tg-hint hover:text-tg-text'
+              ? 'text-tg-button font-semibold'
+              : 'text-tg-hint hover:text-tg-text font-medium'
           )}
           aria-label="Корзина"
         >
@@ -68,8 +68,8 @@ const BottomNavigation = ({ currentPage, onNavigate }: Props) => {
           className={clsx(
             'flex flex-col items-center justify-center gap-1 min-w-[44px] min-h-[44px] p-2 rounded-lg transition-colors',
             currentPage === 'profile'
-              ? 'text-tg-button'
-              : 'text-tg-hint hover:text-tg-text'
+              ? 'text-tg-button font-semibold'
+              : 'text-tg-hint hover:text-tg-text font-medium'
           )}
           aria-label="Профиль"
         >

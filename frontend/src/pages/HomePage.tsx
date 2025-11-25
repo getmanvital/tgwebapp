@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import CollectionCard from '../components/CollectionCard';
 import CollectionCardSkeleton from '../components/CollectionCardSkeleton';
 import ProductCard from '../components/ProductCard';
 import ProductCardSkeleton from '../components/ProductCardSkeleton';
 import { getCollections, getProducts } from '../services/api';
 import { useTelegramContact } from '../hooks/useTelegramContact';
+import { useSwipeNavigation } from '../hooks/useSwipeNavigation';
+import { useImagePrefetch } from '../hooks/useImagePrefetch';
+import { getBackendUrl } from '../utils/backendUrl';
 import type { Collection, Product } from '../types';
 import { logger } from '../utils/logger';
 
@@ -60,6 +63,38 @@ const HomePage = () => {
     }
   }, [selectedCollection, hideContactButton]);
 
+  // Навигация свайпом: при свайпе вправо возвращаемся к коллекциям
+  useSwipeNavigation({
+    onSwipeRight: () => {
+      if (selectedCollection) {
+        setSelectedCollection(undefined);
+      }
+    },
+    disabled: !selectedCollection, // Отключаем, если уже на странице коллекций
+  });
+
+  // Предзагрузка изображений товаров
+  const productImageUrls = useMemo(() => {
+    if (!selectedCollection || products.length === 0) {
+      return [];
+    }
+    const backendUrl = getBackendUrl();
+    return products
+      .map((product) => {
+        if (product.thumb_photo) {
+          if (product.thumb_photo.startsWith('/photos/')) {
+            return `${backendUrl}${product.thumb_photo}`;
+          }
+          return product.thumb_photo;
+        }
+        return null;
+      })
+      .filter((url): url is string => url !== null)
+      .slice(0, 10); // Предзагружаем первые 10 изображений
+  }, [products, selectedCollection]);
+
+  useImagePrefetch(productImageUrls, !!selectedCollection);
+
   const selectedCollectionData = collections.find(
     (c) => c.id.toString() === selectedCollection,
   );
@@ -90,13 +125,18 @@ const HomePage = () => {
               )}
               {collections.length > 0 && (
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3 w-full box-border overflow-visible">
-                  {collections.map((collection) => (
-                    <CollectionCard
+                  {collections.map((collection, index) => (
+                    <div
                       key={collection.id}
-                      collection={collection}
-                      isActive={false}
-                      onClick={() => setSelectedCollection(collection.id.toString())}
-                    />
+                      className="animate-fade-in"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <CollectionCard
+                        collection={collection}
+                        isActive={false}
+                        onClick={() => setSelectedCollection(collection.id.toString())}
+                      />
+                    </div>
                   ))}
                 </div>
               )}
@@ -118,8 +158,14 @@ const HomePage = () => {
               {!products.length && !error && <p>Товары не найдены</p>}
               {products.length > 0 && (
                 <section className="grid grid-cols-2 gap-3">
-                  {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                  {products.map((product, index) => (
+                    <div
+                      key={product.id}
+                      className="animate-fade-in"
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <ProductCard product={product} />
+                    </div>
                   ))}
                 </section>
               )}

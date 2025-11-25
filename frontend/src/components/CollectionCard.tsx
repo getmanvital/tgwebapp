@@ -43,9 +43,13 @@ const CollectionCard = ({ collection, isActive, onClick }: Props) => {
           loading="lazy" 
           decoding="async"
           className="w-full h-full object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = 'https://via.placeholder.com/300x200?text=No+Image';
+          }}
         />
       </div>
-      <h3 className="p-3 m-0 text-sm font-semibold text-center text-tg-text">
+      <h3 className="p-3 m-0 text-sm font-semibold text-center text-tg-text dark:text-white">
         {collection.title}
       </h3>
     </article>

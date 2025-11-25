@@ -155,12 +155,16 @@ const PhotoGallery = ({ images, initialIndex, onClose, isLoading = false }: Prop
                 direction === 'right' && 'animate-slide-in-right'
               )}
             >
-              <img
-                src={images[currentIndex]}
-                alt={`Фото ${currentIndex + 1} из ${images.length}`}
-                className="max-w-full max-h-full w-auto h-auto object-contain select-none pointer-events-none block"
-                key={currentIndex}
-              />
+                  <img
+                    src={images[currentIndex]}
+                    alt={`Фото ${currentIndex + 1} из ${images.length}`}
+                    className="max-w-full max-h-full w-auto h-auto object-contain select-none pointer-events-none block"
+                    key={currentIndex}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = 'https://via.placeholder.com/800x600?text=Ошибка+загрузки';
+                    }}
+                  />
             </div>
           )}
         </div>

@@ -5,6 +5,7 @@ import ChatsPage from './pages/ChatsPage';
 import CartPage from './pages/CartPage';
 import ProfilePage from './pages/ProfilePage';
 import BottomNavigation from './components/BottomNavigation';
+import CartPreview from './components/CartPreview';
 import { CartProvider } from './contexts/CartContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { useTelegram } from './hooks/useTelegram';
@@ -128,10 +129,22 @@ function App() {
     return 'home';
   };
 
+  // Навигация свайпом: при свайпе вправо возвращаемся назад
+  useSwipeNavigation({
+    onSwipeRight: () => {
+      if (currentPage === 'users' || currentPage === 'chats') {
+        handleNavigateToProfile();
+      } else if (currentPage === 'cart' || currentPage === 'profile') {
+        handleNavigate('home');
+      }
+    },
+    disabled: currentPage === 'home', // Отключаем на главной странице
+  });
+
   return (
     <CartProvider>
       <ToastProvider>
-        <div className="min-h-screen bg-tg-bg animate-fade-in">
+        <div className="min-h-screen bg-tg-bg">
           {currentPage === 'home' && <HomePage />}
           {currentPage === 'cart' && <CartPage />}
           {currentPage === 'profile' && (
@@ -146,6 +159,7 @@ function App() {
           {(currentPage === 'home' || currentPage === 'cart' || currentPage === 'profile' || currentPage === 'users' || currentPage === 'chats') && (
             <BottomNavigation currentPage={getBottomNavPage()} onNavigate={handleNavigate} />
           )}
+          <CartPreview />
         </div>
       </ToastProvider>
     </CartProvider>

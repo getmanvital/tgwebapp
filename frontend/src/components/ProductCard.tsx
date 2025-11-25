@@ -190,7 +190,7 @@ const ProductCard = ({ product, onContact }: Props) => {
 
   return (
     <>
-      <article className="bg-tg-secondary-bg rounded-2xl p-3 flex flex-col gap-2 shadow-md transition-colors dark:bg-white/10 dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] min-h-[320px]">
+      <article className="bg-tg-secondary-bg rounded-2xl p-3 flex flex-col gap-2 shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg dark:bg-white/10 dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] min-h-[320px] animate-fade-in">
         <div
           className={clsx(
             'relative w-full cursor-pointer rounded-xl overflow-hidden aspect-square',
@@ -204,6 +204,10 @@ const ProductCard = ({ product, onContact }: Props) => {
             loading="lazy" 
             decoding="async"
             className="w-full h-full object-cover block"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = 'https://via.placeholder.com/240x240?text=No+Image';
+            }}
           />
           <button
             onClick={handleAddToCart}
@@ -211,14 +215,14 @@ const ProductCard = ({ product, onContact }: Props) => {
               'absolute top-2 right-2 w-11 h-11 rounded-full',
               'bg-tg-button text-tg-button-text',
               'flex items-center justify-center',
-              'shadow-lg transition-all',
+              'shadow-lg transition-all duration-200',
               'hover:scale-110 active:scale-95',
-              'z-10',
+              'z-10 animate-scale-in',
               isInCart(product.id) && 'bg-green-500'
             )}
             aria-label="Добавить в корзину"
           >
-            <span className="text-xl">{isInCart(product.id) ? '✓' : '🛒'}</span>
+            <span className="text-xl transition-transform duration-200">{isInCart(product.id) ? '✓' : '🛒'}</span>
           </button>
         </div>
         <div className="flex flex-col gap-2 flex-1">
