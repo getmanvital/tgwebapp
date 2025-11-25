@@ -79,8 +79,10 @@ export function useSwipeNavigation({
     if (window.Telegram?.WebApp) {
       try {
         // Пытаемся отключить закрытие приложения при свайпе
-        if (window.Telegram.WebApp.enableClosingConfirmation) {
-          window.Telegram.WebApp.enableClosingConfirmation();
+        // Используем type assertion, так как метод может быть доступен, но не в типах
+        const webApp = window.Telegram.WebApp as any;
+        if (typeof webApp.enableClosingConfirmation === 'function') {
+          webApp.enableClosingConfirmation();
         }
       } catch (error) {
         console.warn('Failed to enable closing confirmation:', error);

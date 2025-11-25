@@ -11,6 +11,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { useTelegram } from './hooks/useTelegram';
 import { useTelegramTheme } from './hooks/useTelegramTheme';
 import { useTelegramUser } from './hooks/useTelegramUser';
+import { useSwipeNavigation } from './hooks/useSwipeNavigation';
 import { saveUser } from './services/api';
 import { logger } from './utils/logger';
 
