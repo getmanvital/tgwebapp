@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import clsx from 'clsx';
 import PhotoGallery from './PhotoGallery';
 import type { Product } from '../types';
 import { getProductPhotos } from '../services/api';
@@ -179,24 +180,36 @@ const ProductCard = ({ product, onContact }: Props) => {
 
   return (
     <>
-      <article className="product-card">
+      <article className="bg-tg-secondary-bg rounded-2xl p-3 flex flex-col gap-2 shadow-md transition-colors dark:bg-white/10 dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
         <div
-          className={`product-card__image-wrapper ${
-            hasMultiplePhotos ? '--has-multiple' : ''
-          }`}
+          className={clsx(
+            'relative w-full cursor-pointer rounded-xl overflow-hidden aspect-square',
+            hasMultiplePhotos && 'after:content-[""] after:absolute after:inset-0 after:bg-gradient-to-b after:from-transparent after:to-black/10 after:pointer-events-none'
+          )}
           onClick={handleImageClick}
         >
-          <img src={thumbPhoto} alt={product.title} loading="lazy" decoding="async" />
+          <img 
+            src={thumbPhoto} 
+            alt={product.title} 
+            loading="lazy" 
+            decoding="async"
+            className="w-full h-full object-cover block"
+          />
           {hasMultiplePhotos && (
-            <div className="product-card__photo-count">
+            <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded-lg text-xs font-medium z-10 dark:bg-white/20 dark:backdrop-blur-[10px]">
               фото
             </div>
           )}
         </div>
-        <div className="product-card__body">
-          <h3>{product.title}</h3>
-          <p className="product-card__price">{product.price?.text}</p>
-          <button onClick={() => onContact(product)}>Написать менеджеру</button>
+        <div className="flex flex-col gap-2">
+          <h3 className="m-0 text-tg-text dark:text-white">{product.title}</h3>
+          <p className="font-semibold text-tg-text m-0">{product.price?.text}</p>
+          <button 
+            onClick={() => onContact(product)}
+            className="border-none rounded-xl py-2.5 px-2.5 bg-tg-button text-tg-button-text transition-opacity hover:opacity-90"
+          >
+            Написать менеджеру
+          </button>
         </div>
       </article>
 

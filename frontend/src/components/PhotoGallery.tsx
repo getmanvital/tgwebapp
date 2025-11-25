@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import clsx from 'clsx';
 
 type Props = {
   images: string[];
@@ -94,10 +95,13 @@ const PhotoGallery = ({ images, initialIndex, onClose, isLoading = false }: Prop
   if (images.length === 0) return null;
 
   return (
-    <div className="photo-gallery" onClick={onClose}>
-      <div className="photo-gallery__container" onClick={(e) => e.stopPropagation()}>
+    <div 
+      className="fixed inset-0 bg-black/95 z-[1000] flex items-center justify-center touch-pan-y"
+      onClick={onClose}
+    >
+      <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
         <button
-          className="photo-gallery__close"
+          className="absolute top-4 right-4 w-11 h-11 border-none bg-white/20 text-white text-[32px] leading-none rounded-full cursor-pointer z-[1001] flex items-center justify-center transition-colors hover:bg-white/30 md:top-2 md:right-2 md:w-10 md:h-10 md:text-[28px]"
           onClick={onClose}
           aria-label="Закрыть"
         >
@@ -107,7 +111,10 @@ const PhotoGallery = ({ images, initialIndex, onClose, isLoading = false }: Prop
         {images.length > 1 && (
           <>
             <button
-              className="photo-gallery__nav photo-gallery__nav--prev"
+              className={clsx(
+                'absolute top-1/2 left-4 -translate-y-1/2 w-12 h-12 border-none bg-white/20 text-white text-[32px] leading-none rounded-full cursor-pointer z-[1001] flex items-center justify-center transition-colors select-none hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed md:left-2 md:w-10 md:h-10 md:text-[28px]',
+                currentIndex === 0 && 'opacity-30 cursor-not-allowed'
+              )}
               onClick={goToPrevious}
               disabled={currentIndex === 0}
               aria-label="Предыдущее фото"
@@ -115,7 +122,10 @@ const PhotoGallery = ({ images, initialIndex, onClose, isLoading = false }: Prop
               ‹
             </button>
             <button
-              className="photo-gallery__nav photo-gallery__nav--next"
+              className={clsx(
+                'absolute top-1/2 right-4 -translate-y-1/2 w-12 h-12 border-none bg-white/20 text-white text-[32px] leading-none rounded-full cursor-pointer z-[1001] flex items-center justify-center transition-colors select-none hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed md:right-2 md:w-10 md:h-10 md:text-[28px]',
+                currentIndex === images.length - 1 && 'opacity-30 cursor-not-allowed'
+              )}
               onClick={goToNext}
               disabled={currentIndex === images.length - 1}
               aria-label="Следующее фото"
@@ -126,23 +136,25 @@ const PhotoGallery = ({ images, initialIndex, onClose, isLoading = false }: Prop
         )}
 
         <div
-          className="photo-gallery__image-wrapper"
+          className="w-full h-full flex items-center justify-center p-[60px_20px_100px] box-border relative overflow-hidden md:p-[40px_16px]"
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
           {isLoading ? (
-            <div className="photo-gallery__loading">Загрузка фото...</div>
+            <div className="text-white text-lg text-center p-5">Загрузка фото...</div>
           ) : (
             <div 
-              className={`photo-gallery__image-container ${
-                direction ? `--direction-${direction}` : ''
-              } ${isTransitioning ? '--transitioning' : ''}`}
+              className={clsx(
+                'w-full h-full flex items-center justify-center relative transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] transition-opacity duration-300',
+                direction === 'left' && 'animate-slide-in-left',
+                direction === 'right' && 'animate-slide-in-right'
+              )}
             >
               <img
                 src={images[currentIndex]}
                 alt={`Фото ${currentIndex + 1} из ${images.length}`}
-                className="photo-gallery__image"
+                className="max-w-full max-h-full w-auto h-auto object-contain select-none pointer-events-none block"
                 key={currentIndex}
               />
             </div>
@@ -151,20 +163,23 @@ const PhotoGallery = ({ images, initialIndex, onClose, isLoading = false }: Prop
 
         {images.length > 1 && (
           <>
-            <div className="photo-gallery__indicators">
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-[1001]">
               {images.map((_, index) => (
                 <button
                   key={index}
-                  className={`photo-gallery__indicator ${
-                    index === currentIndex ? '--active' : ''
-                  }`}
+                  className={clsx(
+                    'w-2 h-2 border-none rounded-full cursor-pointer p-0 transition-all',
+                    index === currentIndex
+                      ? 'bg-white scale-[1.3]'
+                      : 'bg-white/40 hover:bg-white/60 hover:scale-110'
+                  )}
                   onClick={() => setCurrentIndex(index)}
                   aria-label={`Перейти к фото ${index + 1}`}
                 />
               ))}
             </div>
 
-            <div className="photo-gallery__counter">
+            <div className="absolute top-4 left-4 text-white text-sm font-medium bg-black/50 px-3 py-1.5 rounded-2xl z-[1001]">
               {currentIndex + 1} / {images.length}
             </div>
           </>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import clsx from 'clsx';
 import type { ChatMessage } from '../services/api';
 
 type Props = {
@@ -51,24 +52,18 @@ const ChatView = ({ messages, product, onSendMessage, loading }: Props) => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div className="flex flex-col h-full">
       {/* Информация о товаре, если есть */}
       {product && (
-        <div
-          style={{
-            padding: '12px',
-            backgroundColor: 'var(--tg-theme-secondary-bg-color, #f0f0f0)',
-            borderBottom: '1px solid var(--tg-theme-hint-color, #ddd)',
-          }}
-        >
-          <div style={{ fontSize: '12px', color: 'var(--tg-theme-hint-color, #999)', marginBottom: '4px' }}>
+        <div className="p-3 bg-tg-secondary-bg border-b border-tg-hint">
+          <div className="text-xs text-tg-hint mb-1">
             Интересующий товар:
           </div>
-          <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--tg-theme-text-color, #000)' }}>
+          <div className="text-sm font-bold text-tg-text">
             📦 {product.title}
           </div>
           {product.price && (
-            <div style={{ fontSize: '12px', color: 'var(--tg-theme-hint-color, #666)', marginTop: '4px' }}>
+            <div className="text-xs text-tg-hint mt-1">
               💰 {product.price}
             </div>
           )}
@@ -76,72 +71,46 @@ const ChatView = ({ messages, product, onSendMessage, loading }: Props) => {
       )}
 
       {/* История сообщений */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-        }}
-      >
+      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
         {loading && messages.length === 0 ? (
-          <div style={{ textAlign: 'center', color: 'var(--tg-theme-hint-color, #999)' }}>
+          <div className="text-center text-tg-hint">
             Загрузка сообщений...
           </div>
         ) : messages.length === 0 ? (
-          <div style={{ textAlign: 'center', color: 'var(--tg-theme-hint-color, #999)' }}>
+          <div className="text-center text-tg-hint">
             Нет сообщений
           </div>
         ) : (
           messages.map((message) => (
             <div
               key={message.id}
-              style={{
-                display: 'flex',
-                justifyContent: message.direction === 'user_to_manager' ? 'flex-start' : 'flex-end',
-              }}
+              className={clsx(
+                'flex',
+                message.direction === 'user_to_manager' ? 'justify-start' : 'justify-end'
+              )}
             >
               <div
-                style={{
-                  maxWidth: '75%',
-                  padding: '10px 14px',
-                  borderRadius: '12px',
-                  backgroundColor:
-                    message.direction === 'user_to_manager'
-                      ? 'var(--tg-theme-secondary-bg-color, #f5f5f5)'
-                      : 'var(--tg-theme-button-color, #3390ec)',
-                  color:
-                    message.direction === 'user_to_manager'
-                      ? 'var(--tg-theme-text-color, #000)'
-                      : '#fff',
-                  wordWrap: 'break-word',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                }}
+                className={clsx(
+                  'max-w-[75%] px-3.5 py-2.5 rounded-xl break-words shadow-sm',
+                  message.direction === 'user_to_manager'
+                    ? 'bg-tg-secondary-bg text-tg-text'
+                    : 'bg-tg-button text-white'
+                )}
               >
                 {message.productTitle && (
                   <div
-                    style={{
-                      fontSize: '11px',
-                      opacity: 0.8,
-                      marginBottom: '4px',
-                      paddingBottom: '4px',
-                      borderBottom: `1px solid ${message.direction === 'user_to_manager' ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.3)'}`,
-                    }}
+                    className={clsx(
+                      'text-[11px] opacity-80 mb-1 pb-1',
+                      message.direction === 'user_to_manager'
+                        ? 'border-b border-black/10'
+                        : 'border-b border-white/30'
+                    )}
                   >
                     📦 {message.productTitle}
                   </div>
                 )}
-                <div style={{ whiteSpace: 'pre-wrap' }}>{message.content}</div>
-                <div
-                  style={{
-                    fontSize: '10px',
-                    opacity: 0.7,
-                    marginTop: '4px',
-                    textAlign: 'right',
-                  }}
-                >
+                <div className="whitespace-pre-wrap">{message.content}</div>
+                <div className="text-[10px] opacity-70 mt-1 text-right">
                   {formatTime(message.sentAt)}
                 </div>
               </div>
@@ -152,14 +121,8 @@ const ChatView = ({ messages, product, onSendMessage, loading }: Props) => {
       </div>
 
       {/* Форма отправки сообщения */}
-      <div
-        style={{
-          padding: '12px',
-          borderTop: '1px solid var(--tg-theme-hint-color, #ddd)',
-          backgroundColor: 'var(--tg-theme-bg-color, #fff)',
-        }}
-      >
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+      <div className="p-3 border-t border-tg-hint bg-tg-bg">
+        <div className="flex gap-2 items-center">
           <input
             type="text"
             value={inputValue}
@@ -167,33 +130,17 @@ const ChatView = ({ messages, product, onSendMessage, loading }: Props) => {
             onKeyPress={handleKeyPress}
             placeholder="Введите сообщение..."
             disabled={sending}
-            style={{
-              flex: 1,
-              padding: '10px 14px',
-              borderRadius: '20px',
-              border: '1px solid var(--tg-theme-hint-color, #ddd)',
-              fontSize: '14px',
-              backgroundColor: 'var(--tg-theme-bg-color, #fff)',
-              color: 'var(--tg-theme-text-color, #000)',
-            }}
+            className="flex-1 px-3.5 py-2.5 rounded-[20px] border border-tg-hint text-sm bg-tg-bg text-tg-text"
           />
           <button
             onClick={handleSend}
             disabled={!inputValue.trim() || sending}
-            style={{
-              padding: '10px 20px',
-              borderRadius: '20px',
-              border: 'none',
-              backgroundColor:
-                !inputValue.trim() || sending
-                  ? 'var(--tg-theme-hint-color, #ccc)'
-                  : 'var(--tg-theme-button-color, #3390ec)',
-              color: '#fff',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              cursor: !inputValue.trim() || sending ? 'not-allowed' : 'pointer',
-              transition: 'background-color 0.2s',
-            }}
+            className={clsx(
+              'px-5 py-2.5 rounded-[20px] border-none text-sm font-bold text-white transition-colors',
+              !inputValue.trim() || sending
+                ? 'bg-tg-hint cursor-not-allowed'
+                : 'bg-tg-button cursor-pointer hover:opacity-90'
+            )}
           >
             {sending ? '...' : '→'}
           </button>

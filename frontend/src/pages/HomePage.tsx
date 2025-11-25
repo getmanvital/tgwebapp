@@ -102,13 +102,13 @@ const HomePage = ({
   );
 
   return (
-    <main>
-      <header>
+    <main className="flex flex-col gap-4 w-full max-w-full box-border pb-[calc(72px+max(16px,env(safe-area-inset-bottom)))]">
+      <header className="flex flex-col gap-3">
         {selectedCollection ? (
           <>
-            <div className="header-actions">
+            <div className="flex items-center">
               <button
-                className="back-button"
+                className="border-none bg-transparent text-tg-link cursor-pointer py-2 px-0 text-sm font-medium flex items-center gap-1 transition-opacity hover:opacity-70"
                 onClick={() => {
                   setSelectedCollection(undefined);
                   setQuery('');
@@ -118,81 +118,36 @@ const HomePage = ({
                 ← Назад к подборкам
               </button>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <div className="flex justify-between items-center w-full">
               <h1>{selectedCollectionData?.title || 'Товары'}</h1>
               <button
                 onClick={forceReload}
-                style={{
-                  padding: '8px 16px',
-                  background: 'var(--tg-theme-button-color, #0f62fe)',
-                  color: 'var(--tg-theme-button-text-color, #fff)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  transition: 'opacity 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = '0.9';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = '1';
-                }}
+                className="px-4 py-2 bg-tg-button text-tg-button-text border-none rounded-lg cursor-pointer text-sm transition-opacity hover:opacity-90"
               >
                 🔄 Обновить
               </button>
             </div>
           </>
         ) : (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <div className="flex justify-between items-center w-full">
             <h1>Коллекции</h1>
             {isAdmin && (onNavigateToUsers || onNavigateToChats) && (
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div className="flex gap-2">
                 {onNavigateToChats && (
                   <button
                     onClick={onNavigateToChats}
-                    style={{
-                      padding: '8px 16px',
-                      background: 'var(--tg-theme-button-color, #0f62fe)',
-                      color: 'var(--tg-theme-button-text-color, #fff)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      transition: 'opacity 0.2s',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.opacity = '0.9';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.opacity = '1';
-                    }}
+                    className="px-4 py-2 bg-tg-button text-tg-button-text border-none rounded-lg cursor-pointer text-sm transition-opacity hover:opacity-90"
                   >
                     💬 Чаты
                   </button>
                 )}
                 {onNavigateToUsers && (
-              <button
-                onClick={onNavigateToUsers}
-                style={{
-                  padding: '8px 16px',
-                  background: 'var(--tg-theme-button-color, #0f62fe)',
-                  color: 'var(--tg-theme-button-text-color, #fff)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  transition: 'opacity 0.2s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.opacity = '0.9';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.opacity = '1';
-                }}
-              >
-                👥 Пользователи
-              </button>
+                  <button
+                    onClick={onNavigateToUsers}
+                    className="px-4 py-2 bg-tg-button text-tg-button-text border-none rounded-lg cursor-pointer text-sm transition-opacity hover:opacity-90"
+                  >
+                    👥 Пользователи
+                  </button>
                 )}
               </div>
             )}
@@ -204,7 +159,7 @@ const HomePage = ({
         <>
           {error && <p className="error">{error}</p>}
           {loading ? (
-            <div className="collections-grid">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3 w-full box-border overflow-visible">
               {Array.from({ length: 6 }).map((_, index) => (
                 <CollectionCardSkeleton key={index} />
               ))}
@@ -215,7 +170,7 @@ const HomePage = ({
                 <p>Коллекции не найдены</p>
               )}
               {collections.length > 0 && (
-                <div className="collections-grid">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3 w-full box-border overflow-visible">
                   {collections.map((collection) => (
                     <CollectionCard
                       key={collection.id}
@@ -242,7 +197,7 @@ const HomePage = ({
           {error && <p className="error">{error}</p>}
 
           {loading ? (
-            <section className="products-grid">
+            <section className="grid grid-cols-2 gap-3">
               {Array.from({ length: 6 }).map((_, index) => (
                 <ProductCardSkeleton key={index} />
               ))}
@@ -251,7 +206,7 @@ const HomePage = ({
             <>
               {!products.length && !error && <p>Товары не найдены</p>}
               {products.length > 0 && (
-                <section className="products-grid">
+                <section className="grid grid-cols-2 gap-3">
                   {products.map((product) => (
                     <ProductCard key={product.id} product={product} onContact={handleContact} />
                   ))}

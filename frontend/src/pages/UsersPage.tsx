@@ -157,11 +157,11 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
   };
 
   return (
-    <main>
-      <header>
-        <div className="header-actions">
+    <main className="flex flex-col gap-4 w-full max-w-full box-border pb-[calc(72px+max(16px,env(safe-area-inset-bottom)))]">
+      <header className="flex flex-col gap-3">
+        <div className="flex items-center">
           <button
-            className="back-button"
+            className="border-none bg-transparent text-tg-link cursor-pointer py-2 px-0 text-sm font-medium flex items-center gap-1 transition-opacity hover:opacity-70 disabled:opacity-50"
             onClick={onBack}
             disabled={deleting}
           >
@@ -171,35 +171,19 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
         <h1>
           Пользователи
           {totalCount !== null && (
-            <span style={{ 
-              fontSize: '0.7em', 
-              fontWeight: 'normal', 
-              color: 'var(--tg-theme-hint-color, #999)',
-              marginLeft: '8px'
-            }}>
+            <span className="text-[0.7em] font-normal text-tg-hint ml-2">
               ({totalCount} {totalCount === 1 ? 'пользователь' : totalCount < 5 ? 'пользователя' : 'пользователей'})
             </span>
           )}
         </h1>
         {isAdmin && (
-          <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div className="mt-3 flex gap-2 flex-wrap">
             <button
               onClick={() => {
                 fetchUsers(true);
               }}
               disabled={refreshing || deleting}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: 'var(--tg-theme-button-color, #3390ec)',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: '500',
-                cursor: loading || deleting ? 'not-allowed' : 'pointer',
-                opacity: loading || deleting ? 0.6 : 1,
-                transition: 'opacity 0.2s',
-              }}
+              className="px-4 py-2 bg-tg-button text-white border-none rounded-lg text-sm font-medium transition-opacity disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90"
             >
               {refreshing ? 'Загрузка...' : '🔄 Обновить'}
             </button>
@@ -207,18 +191,7 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
               <button
                 onClick={handleDeleteAllUsers}
                 disabled={deleting || refreshing}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: 'var(--tg-theme-destructive-text-color, #d7263d)',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: deleting || loading ? 'not-allowed' : 'pointer',
-                  opacity: deleting || loading ? 0.6 : 1,
-                  transition: 'opacity 0.2s',
-                }}
+                className="px-4 py-2 bg-tg-destructive-text text-white border-none rounded-lg text-sm font-medium transition-opacity disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90"
               >
                 {deleting ? 'Удаление...' : '🗑️ Очистить базу'}
               </button>
@@ -228,27 +201,15 @@ const UsersPage = ({ onBack }: { onBack: () => void }) => {
       </header>
 
       {error && (
-        <div className="error" style={{ padding: '16px', margin: '16px 0' }}>
+        <div className="error p-4 my-4">
           {error}
         </div>
       )}
 
       {!error && (
-        <div style={{ marginTop: '16px', position: 'relative' }}>
+        <div className="mt-4 relative">
           {refreshing && (
-            <div style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              zIndex: 10,
-              background: 'var(--tg-theme-bg-color, #fff)',
-              padding: '8px',
-              textAlign: 'center',
-              fontSize: '14px',
-              color: 'var(--tg-theme-hint-color, #999)',
-              borderBottom: '1px solid var(--tg-theme-hint-color, #eee)',
-            }}>
+            <div className="absolute top-0 left-0 right-0 z-10 bg-tg-bg p-2 text-center text-sm text-tg-hint border-b border-tg-hint">
               🔄 Обновление...
             </div>
           )}

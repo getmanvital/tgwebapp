@@ -65,18 +65,9 @@ function App() {
 
   if (error) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        flexDirection: 'column',
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '100vh',
-        padding: '20px',
-        color: '#1b1b1f',
-        textAlign: 'center'
-      }}>
-        <p style={{ color: '#d7263d', marginBottom: '10px' }}>Ошибка загрузки</p>
-        <p style={{ fontSize: '14px', color: '#878a99' }}>{error}</p>
+      <div className="flex flex-col justify-center items-center min-h-screen p-5 text-tg-text text-center">
+        <p className="text-tg-destructive-text mb-2.5">Ошибка загрузки</p>
+        <p className="text-sm text-tg-hint">{error}</p>
       </div>
     );
   }
@@ -86,14 +77,7 @@ function App() {
   if (!isReady) {
     // Показываем минимальный экран загрузки только на очень короткое время
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '100dvh',
-        color: 'var(--tg-theme-text-color, #1b1b1f)',
-        backgroundColor: 'var(--tg-theme-bg-color, #f5f5f5)'
-      }}>
+      <div className="flex justify-center items-center min-h-[100dvh] text-tg-text bg-tg-bg">
         <p>Загрузка...</p>
       </div>
     );

@@ -158,13 +158,13 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
   };
 
   return (
-    <main style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <header>
+    <main className="h-full flex flex-col">
+      <header className="flex flex-col gap-3">
         {selectedUserId ? (
           <>
-            <div className="header-actions">
+            <div className="flex items-center">
               <button
-                className="back-button"
+                className="border-none bg-transparent text-tg-link cursor-pointer py-2 px-0 text-sm font-medium flex items-center gap-1 transition-opacity hover:opacity-70"
                 onClick={handleBackToList}
               >
                 ← Назад к чатам
@@ -174,24 +174,19 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
           </>
         ) : (
           <>
-            <div className="header-actions">
+            <div className="flex items-center">
               <button
-                className="back-button"
+                className="border-none bg-transparent text-tg-link cursor-pointer py-2 px-0 text-sm font-medium flex items-center gap-1 transition-opacity hover:opacity-70"
                 onClick={onBack}
               >
                 ← Назад
               </button>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <div className="flex justify-between items-center w-full">
               <h1>
                 Чаты
                 {chats.length > 0 && (
-                  <span style={{
-                    fontSize: '0.7em',
-                    fontWeight: 'normal',
-                    color: 'var(--tg-theme-hint-color, #999)',
-                    marginLeft: '8px',
-                  }}>
+                  <span className="text-[0.7em] font-normal text-tg-hint ml-2">
                     ({chats.length})
                   </span>
                 )}
@@ -202,17 +197,7 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
                   fetchChats();
                 }}
                 disabled={loading}
-                style={{
-                  padding: '8px 16px',
-                  background: 'var(--tg-theme-button-color, #0f62fe)',
-                  color: 'var(--tg-theme-button-text-color, #fff)',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  fontSize: '14px',
-                  opacity: loading ? 0.6 : 1,
-                  transition: 'opacity 0.2s',
-                }}
+                className="px-4 py-2 bg-tg-button text-tg-button-text border-none rounded-lg text-sm transition-opacity disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90"
               >
                 🔄 Обновить
               </button>
@@ -222,13 +207,13 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
       </header>
 
       {error && (
-        <div className="error" style={{ padding: '16px', margin: '16px' }}>
+        <div className="error p-4 m-4">
           {error}
         </div>
       )}
 
       {selectedUserId ? (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+        <div className="flex-1 flex flex-col min-h-0">
           <ChatView
             messages={messages}
             product={product}
@@ -237,7 +222,7 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
           />
         </div>
       ) : (
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div className="flex-1 overflow-y-auto">
           <ChatsList
             chats={chats}
             loading={loading}

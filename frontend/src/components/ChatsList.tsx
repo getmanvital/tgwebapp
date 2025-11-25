@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import type { Chat } from '../services/api';
 
 type Props = {
@@ -9,7 +10,7 @@ type Props = {
 const ChatsList = ({ chats, loading, onChatSelect }: Props) => {
   if (loading) {
     return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
+      <div className="p-5 text-center">
         <p>Загрузка чатов...</p>
       </div>
     );
@@ -17,7 +18,7 @@ const ChatsList = ({ chats, loading, onChatSelect }: Props) => {
 
   if (chats.length === 0) {
     return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
+      <div className="p-5 text-center">
         <p>Активных чатов нет</p>
       </div>
     );
@@ -49,134 +50,58 @@ const ChatsList = ({ chats, loading, onChatSelect }: Props) => {
   };
 
   return (
-    <div className="chats-list" style={{ padding: '16px' }}>
+    <div className="p-4">
       {chats.map((chat) => (
         <div
           key={chat.userId}
-          className="chat-item"
           onClick={() => onChatSelect(chat.userId)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '12px',
-            marginBottom: '8px',
-            backgroundColor: 'var(--tg-theme-secondary-bg-color, #f5f5f5)',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s',
-            border: chat.unreadCount > 0 ? '2px solid var(--tg-theme-button-color, #3390ec)' : '2px solid transparent',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--tg-theme-secondary-bg-color, #e0e0e0)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--tg-theme-secondary-bg-color, #f5f5f5)';
-          }}
+          className={clsx(
+            'flex items-center p-3 mb-2 bg-tg-secondary-bg rounded-xl cursor-pointer',
+            'transition-colors duration-200 border-2',
+            'hover:bg-tg-secondary-bg/80',
+            chat.unreadCount > 0 
+              ? 'border-tg-button' 
+              : 'border-transparent'
+          )}
         >
           {chat.photoUrl ? (
             <img
               src={chat.photoUrl}
               alt={chat.userName}
-              style={{
-                width: '50px',
-                height: '50px',
-                borderRadius: '50%',
-                marginRight: '12px',
-                objectFit: 'cover',
-              }}
+              className="w-[50px] h-[50px] rounded-full mr-3 object-cover"
             />
           ) : (
-            <div
-              style={{
-                width: '50px',
-                height: '50px',
-                borderRadius: '50%',
-                marginRight: '12px',
-                backgroundColor: 'var(--tg-theme-button-color, #3390ec)',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '18px',
-                fontWeight: 'bold',
-              }}
-            >
+            <div className="w-[50px] h-[50px] rounded-full mr-3 bg-tg-button text-white flex items-center justify-center text-lg font-bold">
               {chat.firstName[0].toUpperCase()}
             </div>
           )}
           
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: '16px',
-                  fontWeight: chat.unreadCount > 0 ? 'bold' : 'normal',
-                  color: 'var(--tg-theme-text-color, #000)',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
+          <div className="flex-1 min-w-0">
+            <div className="flex justify-between items-center mb-1">
+              <h3 className={clsx(
+                'm-0 text-base text-tg-text overflow-hidden text-ellipsis whitespace-nowrap',
+                chat.unreadCount > 0 ? 'font-bold' : 'font-normal'
+              )}>
                 {chat.userName}
               </h3>
-              <span
-                style={{
-                  fontSize: '12px',
-                  color: 'var(--tg-theme-hint-color, #999)',
-                  marginLeft: '8px',
-                  flexShrink: 0,
-                }}
-              >
+              <span className="text-xs text-tg-hint ml-2 flex-shrink-0">
                 {formatTime(chat.lastMessage.sentAt)}
               </span>
             </div>
             
             {chat.product && (
-              <div
-                style={{
-                  fontSize: '12px',
-                  color: 'var(--tg-theme-button-color, #3390ec)',
-                  marginBottom: '4px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
+              <div className="text-xs text-tg-button mb-1 overflow-hidden text-ellipsis whitespace-nowrap">
                 📦 {chat.product.title}
               </div>
             )}
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: '14px',
-                  color: 'var(--tg-theme-hint-color, #666)',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  flex: 1,
-                }}
-              >
+            <div className="flex justify-between items-center">
+              <p className="m-0 text-sm text-tg-hint overflow-hidden text-ellipsis whitespace-nowrap flex-1">
                 {truncateMessage(chat.lastMessage.content)}
               </p>
               
               {chat.unreadCount > 0 && (
-                <span
-                  style={{
-                    backgroundColor: 'var(--tg-theme-button-color, #3390ec)',
-                    color: '#fff',
-                    borderRadius: '12px',
-                    padding: '2px 8px',
-                    fontSize: '12px',
-                    fontWeight: 'bold',
-                    marginLeft: '8px',
-                    flexShrink: 0,
-                    minWidth: '20px',
-                    textAlign: 'center',
-                  }}
-                >
+                <span className="bg-tg-button text-white rounded-xl px-2 py-0.5 text-xs font-bold ml-2 flex-shrink-0 min-w-[20px] text-center">
                   {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
                 </span>
               )}
