@@ -70,26 +70,6 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  if (error) {
-    return (
-      <div className="flex flex-col justify-center items-center min-h-screen p-5 text-tg-text text-center">
-        <p className="text-tg-destructive-text mb-2.5">Ошибка загрузки</p>
-        <p className="text-sm text-tg-hint">{error}</p>
-      </div>
-    );
-  }
-
-  // Убираем экран загрузки - сразу показываем контент
-  // Это поможет избежать проблем с застреванием на "Загрузка..."
-  if (!isReady) {
-    // Показываем минимальный экран загрузки только на очень короткое время
-    return (
-      <div className="flex justify-center items-center min-h-[100dvh] text-tg-text bg-tg-bg">
-        <p>Загрузка...</p>
-      </div>
-    );
-  }
-
   const handleNavigate = (page: 'home' | 'cart' | 'profile') => {
     if (page === 'home') {
       setCurrentPage('home');
@@ -131,6 +111,7 @@ function App() {
   };
 
   // Навигация свайпом: при свайпе вправо возвращаемся назад
+  // ВАЖНО: Все хуки должны вызываться до любых условных возвратов
   useSwipeNavigation({
     onSwipeRight: () => {
       if (currentPage === 'users' || currentPage === 'chats') {
@@ -141,6 +122,26 @@ function App() {
     },
     disabled: currentPage === 'home', // Отключаем на главной странице
   });
+
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center min-h-screen p-5 text-tg-text text-center">
+        <p className="text-tg-destructive-text mb-2.5">Ошибка загрузки</p>
+        <p className="text-sm text-tg-hint">{error}</p>
+      </div>
+    );
+  }
+
+  // Убираем экран загрузки - сразу показываем контент
+  // Это поможет избежать проблем с застреванием на "Загрузка..."
+  if (!isReady) {
+    // Показываем минимальный экран загрузки только на очень короткое время
+    return (
+      <div className="flex justify-center items-center min-h-[100dvh] text-tg-text bg-tg-bg">
+        <p>Загрузка...</p>
+      </div>
+    );
+  }
 
   return (
     <CartProvider>
