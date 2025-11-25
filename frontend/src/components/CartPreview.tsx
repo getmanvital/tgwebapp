@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { getBackendUrl } from '../utils/backendUrl';
 
@@ -6,6 +6,7 @@ const CartPreview = () => {
   const { items } = useCart();
   const [isVisible, setIsVisible] = useState(false);
   const [lastAddedItem, setLastAddedItem] = useState<typeof items[0] | null>(null);
+  const lastShownItemRef = useRef<string | null>(null); // Отслеживаем последний показанный товар по ID+времени
 
   useEffect(() => {
     if (items.length > 0) {
@@ -15,20 +16,29 @@ const CartPreview = () => {
       );
       const newest = sorted[0];
       
-      // Показываем превью только если это новый товар
-      if (newest !== lastAddedItem) {
+      // Создаем уникальный ключ для товара: ID + время добавления
+      const itemKey = `${newest.product.id}-${newest.addedAt.getTime()}`;
+      
+      // Показываем превью только если это новый товар (по ключу)
+      if (itemKey !== lastShownItemRef.current) {
+        lastShownItemRef.current = itemKey;
         setLastAddedItem(newest);
         setIsVisible(true);
         
-        // Автоматически скрываем через 4 секунды
+        // Автоматически скрываем через 1 секунду
         const timer = setTimeout(() => {
           setIsVisible(false);
-        }, 4000);
+        }, 1000);
         
         return () => clearTimeout(timer);
       }
+    } else {
+      // Если корзина пуста, сбрасываем состояние
+      setIsVisible(false);
+      setLastAddedItem(null);
+      lastShownItemRef.current = null;
     }
-  }, [items, lastAddedItem]);
+  }, [items]);
 
   if (!isVisible || !lastAddedItem) {
     return null;
@@ -58,8 +68,12 @@ const CartPreview = () => {
     return 'https://via.placeholder.com/240x240?text=No+Image';
   };
 
+  // Используем key для предотвращения кэширования элемента
+  const itemKey = lastAddedItem ? `${lastAddedItem.product.id}-${lastAddedItem.addedAt.getTime()}` : '';
+
   return (
     <div
+      key={itemKey}
       className="fixed bottom-[calc(88px+max(16px,env(safe-area-inset-bottom)))] left-4 right-4 z-[150] animate-[slide-in-down_0.3s_ease-out]"
       onClick={() => setIsVisible(false)}
     >
