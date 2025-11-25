@@ -1,4 +1,7 @@
 import clsx from 'clsx';
+import HomeIcon from '@mui/icons-material/Home';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import PersonIcon from '@mui/icons-material/Person';
 import { useCart } from '../contexts/CartContext';
 
 type Props = {
@@ -12,10 +15,10 @@ const BottomNavigation = ({ currentPage, onNavigate }: Props) => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 bg-tg-secondary-bg border-t border-black/10 z-[100] dark:bg-white/10 dark:border-white/10"
+      className="fixed bottom-0 left-0 right-0 bg-tg-secondary-bg border-t border-black/10 z-[100] dark:bg-white/20 dark:border-white/20"
       style={{
-        paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
-        paddingTop: '12px',
+        paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
+        paddingTop: '8px',
         paddingLeft: 'max(16px, env(safe-area-inset-left))',
         paddingRight: 'max(16px, env(safe-area-inset-right))',
       }}
@@ -26,28 +29,27 @@ const BottomNavigation = ({ currentPage, onNavigate }: Props) => {
         <button
           onClick={() => onNavigate('home')}
           className={clsx(
-            'flex flex-col items-center justify-center gap-1 min-w-[44px] min-h-[44px] p-2 rounded-lg transition-colors',
+            'flex items-center justify-center min-w-[44px] min-h-[44px] p-2 rounded-lg transition-colors',
             currentPage === 'home'
-              ? 'text-tg-button font-semibold'
-              : 'text-tg-hint hover:text-tg-text font-medium'
+              ? 'text-tg-button'
+              : 'text-tg-hint hover:text-tg-text'
           )}
           aria-label="Главная"
         >
-          <span className="text-2xl">🏠</span>
-          <span className="text-xs font-medium">Домой</span>
+          <HomeIcon sx={{ fontSize: 28 }} />
         </button>
 
         <button
           onClick={() => onNavigate('cart')}
           className={clsx(
-            'relative flex flex-col items-center justify-center gap-1 min-w-[44px] min-h-[44px] p-2 rounded-lg transition-colors',
+            'relative flex items-center justify-center min-w-[44px] min-h-[44px] p-2 rounded-lg transition-colors',
             currentPage === 'cart'
-              ? 'text-tg-button font-semibold'
-              : 'text-tg-hint hover:text-tg-text font-medium'
+              ? 'text-tg-button'
+              : 'text-tg-hint hover:text-tg-text'
           )}
           aria-label="Корзина"
         >
-          <span className="text-2xl">🛒</span>
+          <ShoppingCartIcon sx={{ fontSize: 28 }} />
           {cartCount > 0 && (
             <span
               className={clsx(
@@ -60,21 +62,19 @@ const BottomNavigation = ({ currentPage, onNavigate }: Props) => {
               {cartCount > 99 ? '99+' : cartCount}
             </span>
           )}
-          <span className="text-xs font-medium">Корзина</span>
         </button>
 
         <button
           onClick={() => onNavigate('profile')}
           className={clsx(
-            'flex flex-col items-center justify-center gap-1 min-w-[44px] min-h-[44px] p-2 rounded-lg transition-colors',
+            'flex items-center justify-center min-w-[44px] min-h-[44px] p-2 rounded-lg transition-colors',
             currentPage === 'profile'
-              ? 'text-tg-button font-semibold'
-              : 'text-tg-hint hover:text-tg-text font-medium'
+              ? 'text-tg-button'
+              : 'text-tg-hint hover:text-tg-text'
           )}
           aria-label="Профиль"
         >
-          <span className="text-2xl">👤</span>
-          <span className="text-xs font-medium">Профиль</span>
+          <PersonIcon sx={{ fontSize: 28 }} />
         </button>
       </div>
     </nav>

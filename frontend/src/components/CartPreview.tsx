@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import clsx from 'clsx';
 import { useCart } from '../contexts/CartContext';
 import { getBackendUrl } from '../utils/backendUrl';
 
@@ -25,10 +26,10 @@ const CartPreview = () => {
         setLastAddedItem(newest);
         setIsVisible(true);
         
-        // Автоматически скрываем через 1 секунду
+        // Автоматически скрываем через 4 секунды
         const timer = setTimeout(() => {
           setIsVisible(false);
-        }, 1000);
+        }, 4000);
         
         return () => clearTimeout(timer);
       }
@@ -74,11 +75,14 @@ const CartPreview = () => {
   return (
     <div
       key={itemKey}
-      className="fixed bottom-[calc(88px+max(16px,env(safe-area-inset-bottom)))] left-4 right-4 z-[150] animate-[slide-in-down_0.3s_ease-out]"
+      className={clsx(
+        "fixed bottom-[calc(88px+max(16px,env(safe-area-inset-bottom)))] left-4 right-4 z-[150] transition-opacity duration-300",
+        isVisible ? "animate-[slide-in-down_0.3s_ease-out] opacity-100" : "animate-[fade-out_0.3s_ease-out] opacity-0"
+      )}
       onClick={() => setIsVisible(false)}
     >
       <div
-        className="bg-tg-secondary-bg rounded-2xl p-3 shadow-lg border border-black/10 dark:bg-white/10 dark:border-white/10"
+        className="bg-tg-secondary-bg rounded-2xl p-3 shadow-lg border border-black/10 dark:bg-white/20 dark:border-white/20"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3">

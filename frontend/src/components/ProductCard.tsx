@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import clsx from 'clsx';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import CheckIcon from '@mui/icons-material/Check';
 import PhotoGallery from './PhotoGallery';
 import type { Product } from '../types';
 import { getProductPhotos } from '../services/api';
 import { getBackendUrl } from '../utils/backendUrl';
 import { logger } from '../utils/logger';
 import { useCart } from '../contexts/CartContext';
-import { useToast } from '../contexts/ToastContext';
 
 type Props = {
   product: Product;
@@ -18,7 +19,6 @@ const ProductCard = ({ product, onContact }: Props) => {
   const [fullPhotos, setFullPhotos] = useState<string[] | null>(null);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
   const { addToCart, isInCart } = useCart();
-  const { showToast } = useToast();
 
   // Получаем только обложку для карточки товара
   const getThumbPhoto = (): string => {
@@ -185,12 +185,11 @@ const ProductCard = ({ product, onContact }: Props) => {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product);
-    showToast('Товар добавлен в корзину', 'success');
   };
 
   return (
     <>
-      <article className="bg-tg-secondary-bg rounded-2xl p-3 flex flex-col gap-2 shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg dark:bg-white/10 dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] min-h-[320px] animate-fade-in">
+      <article className="bg-tg-secondary-bg rounded-2xl p-2.5 flex flex-col gap-2 shadow-md transition-all duration-200 hover:scale-[1.02] hover:shadow-lg dark:bg-white/10 dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] animate-fade-in">
         <div
           className={clsx(
             'relative w-full cursor-pointer rounded-xl overflow-hidden aspect-square',
@@ -212,22 +211,26 @@ const ProductCard = ({ product, onContact }: Props) => {
           <button
             onClick={handleAddToCart}
             className={clsx(
-              'absolute top-2 right-2 w-11 h-11 rounded-full',
-              'bg-tg-button text-tg-button-text',
+              'absolute bottom-2 right-2 min-w-[44px] min-h-[44px] p-2',
               'flex items-center justify-center',
-              'shadow-lg transition-all duration-200',
-              'hover:scale-110 active:scale-95',
+              'transition-colors rounded-lg',
               'z-10 animate-scale-in',
-              isInCart(product.id) && 'bg-green-500'
+              isInCart(product.id)
+                ? 'text-green-500'
+                : 'text-tg-hint hover:text-tg-text'
             )}
             aria-label="Добавить в корзину"
           >
-            <span className="text-xl transition-transform duration-200">{isInCart(product.id) ? '✓' : '🛒'}</span>
+            {isInCart(product.id) ? (
+              <CheckIcon sx={{ fontSize: 28 }} />
+            ) : (
+              <ShoppingCartIcon sx={{ fontSize: 28 }} />
+            )}
           </button>
         </div>
-        <div className="flex flex-col gap-2 flex-1">
-          <h3 className="m-0 text-tg-text dark:text-white line-clamp-2 min-h-[2.5rem]">{product.title}</h3>
-          <p className="font-semibold text-tg-text m-0 mt-auto">{product.price?.text}</p>
+        <div className="flex flex-col gap-1.5 flex-1">
+          <h3 className="m-0 text-sm text-tg-text dark:text-white leading-tight">{product.title}</h3>
+          <p className="font-semibold text-tg-text m-0 mt-auto text-sm">{product.price?.text}</p>
         </div>
       </article>
 

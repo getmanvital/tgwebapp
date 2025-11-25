@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useImperativeHandle, forwardRef } from 'react';
 import CollectionCard from '../components/CollectionCard';
 import CollectionCardSkeleton from '../components/CollectionCardSkeleton';
 import ProductCard from '../components/ProductCard';
@@ -11,13 +11,24 @@ import { getBackendUrl } from '../utils/backendUrl';
 import type { Collection, Product } from '../types';
 import { logger } from '../utils/logger';
 
-const HomePage = () => {
+export type HomePageRef = {
+  resetCollection: () => void;
+};
+
+const HomePage = forwardRef<HomePageRef>((props, ref) => {
   const { hideContactButton } = useTelegramContact();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<string>();
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Начинаем с true для показа скелетонов сразу
+  const [loadingProducts, setLoadingProducts] = useState(false);
   const [error, setError] = useState<string>();
+
+  useImperativeHandle(ref, () => ({
+    resetCollection: () => {
+      setSelectedCollection(undefined);
+    },
+  }));
 
   useEffect(() => {
     setLoading(true);
@@ -44,16 +55,19 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
-    if (!selectedCollection) return;
+    if (!selectedCollection) {
+      setProducts([]);
+      return;
+    }
     
-    setLoading(true);
+    setLoadingProducts(true);
     setError(undefined);
     getProducts({
       albumId: selectedCollection,
     }, false)
       .then((data) => setProducts(data))
       .catch(() => setError('Ошибка загрузки товаров'))
-      .finally(() => setLoading(false));
+      .finally(() => setLoadingProducts(false));
   }, [selectedCollection]);
 
   // Скрываем кнопку при изменении выбранной коллекции
@@ -103,9 +117,9 @@ const HomePage = () => {
     <main className="flex flex-col gap-4 w-full max-w-full box-border pb-[calc(72px+max(16px,env(safe-area-inset-bottom)))]">
       <header className="flex flex-col gap-3">
         {selectedCollection ? (
-          <h1>{selectedCollectionData?.title || 'Товары'}</h1>
+              <h1>{selectedCollectionData?.title || 'Товары'}</h1>
         ) : (
-          <h1>Коллекции</h1>
+            <h1>Коллекции</h1>
         )}
       </header>
 
@@ -132,10 +146,10 @@ const HomePage = () => {
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
                       <CollectionCard
-                        collection={collection}
-                        isActive={false}
-                        onClick={() => setSelectedCollection(collection.id.toString())}
-                      />
+                      collection={collection}
+                      isActive={false}
+                      onClick={() => setSelectedCollection(collection.id.toString())}
+                    />
                     </div>
                   ))}
                 </div>
@@ -147,7 +161,7 @@ const HomePage = () => {
         <>
           {error && <p className="error">{error}</p>}
 
-          {loading ? (
+          {loadingProducts ? (
             <section className="grid grid-cols-2 gap-3">
               {Array.from({ length: 6 }).map((_, index) => (
                 <ProductCardSkeleton key={index} />
@@ -175,7 +189,9 @@ const HomePage = () => {
       )}
     </main>
   );
-};
+});
+
+HomePage.displayName = 'HomePage';
 
 export default HomePage;
 

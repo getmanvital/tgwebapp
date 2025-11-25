@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import HomePage from './pages/HomePage';
+import { useEffect, useState, useRef } from 'react';
+import HomePage, { type HomePageRef } from './pages/HomePage';
 import UsersPage from './pages/UsersPage';
 import ChatsPage from './pages/ChatsPage';
 import CartPage from './pages/CartPage';
@@ -23,6 +23,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [usersPageKey, setUsersPageKey] = useState(0);
   const [chatsPageKey, setChatsPageKey] = useState(0);
+  const homePageRef = useRef<HomePageRef>(null);
   const user = useTelegramUser();
   
   useTelegram();
@@ -73,6 +74,8 @@ function App() {
   const handleNavigate = (page: 'home' | 'cart' | 'profile') => {
     if (page === 'home') {
       setCurrentPage('home');
+      // Сбрасываем выбранную коллекцию при переходе на главную
+      homePageRef.current?.resetCollection();
     } else if (page === 'cart') {
       setCurrentPage('cart');
     } else if (page === 'profile') {
@@ -147,7 +150,7 @@ function App() {
     <CartProvider>
       <ToastProvider>
         <div className="min-h-screen bg-tg-bg">
-          {currentPage === 'home' && <HomePage />}
+          {currentPage === 'home' && <HomePage ref={homePageRef} />}
           {currentPage === 'cart' && <CartPage />}
           {currentPage === 'profile' && (
             <ProfilePage
