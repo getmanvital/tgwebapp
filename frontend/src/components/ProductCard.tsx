@@ -208,29 +208,31 @@ const ProductCard = ({ product, onContact }: Props) => {
               target.src = 'https://via.placeholder.com/240x240?text=No+Image';
             }}
           />
-          <button
-            onClick={handleAddToCart}
-            className={clsx(
-              'absolute bottom-2 right-2 min-w-[44px] min-h-[44px] p-2',
-              'flex items-center justify-center',
-              'transition-colors rounded-lg',
-              'z-10 animate-scale-in',
-              isInCart(product.id)
-                ? 'text-green-500'
-                : 'text-tg-hint hover:text-tg-text'
-            )}
-            aria-label="Добавить в корзину"
-          >
-            {isInCart(product.id) ? (
-              <CheckIcon style={{ fontSize: 28 }} />
-            ) : (
-              <ShoppingCartIcon style={{ fontSize: 28 }} />
-            )}
-          </button>
         </div>
-        <div className="flex flex-col gap-1.5 flex-1">
-          <h3 className="m-0 text-sm text-tg-text dark:text-white leading-tight">{product.title}</h3>
-          <p className="font-semibold text-tg-text m-0 mt-auto text-sm">{product.price?.text}</p>
+        <div className="flex flex-col gap-1.5 flex-1 relative">
+          <h3 className="m-0 text-sm text-tg-text dark:text-white leading-tight pr-12">{product.title}</h3>
+          <div className="flex items-center justify-between mt-auto">
+            <p className="font-semibold text-tg-text m-0 text-sm">{product.price?.text}</p>
+            <button
+              onClick={handleAddToCart}
+              className={clsx(
+                'min-w-[44px] min-h-[44px] p-2',
+                'flex items-center justify-center',
+                'transition-all rounded-lg',
+                'z-10 animate-scale-in',
+                isInCart(product.id)
+                  ? 'text-green-500 bg-green-500/20 dark:bg-green-500/30'
+                  : 'text-tg-text dark:text-white bg-tg-secondary-bg dark:bg-gray-700/80 hover:bg-gray-200 dark:hover:bg-gray-600 shadow-md'
+              )}
+              aria-label="Добавить в корзину"
+            >
+              {isInCart(product.id) ? (
+                <CheckIcon style={{ fontSize: 28 }} />
+              ) : (
+                <ShoppingCartIcon style={{ fontSize: 28 }} />
+              )}
+            </button>
+          </div>
         </div>
       </article>
 

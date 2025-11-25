@@ -82,7 +82,7 @@ const CartPreview = () => {
       onClick={() => setIsVisible(false)}
     >
       <div
-        className="bg-tg-secondary-bg rounded-2xl p-3 shadow-lg border border-black/10 dark:bg-white/20 dark:border-white/20"
+        className="bg-tg-secondary-bg rounded-2xl p-3 shadow-lg border border-black/10 dark:bg-gray-900/95 dark:border-white/30 backdrop-blur-sm"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3">

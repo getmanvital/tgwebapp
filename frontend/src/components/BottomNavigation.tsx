@@ -15,7 +15,7 @@ const BottomNavigation = ({ currentPage, onNavigate }: Props) => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 bg-tg-secondary-bg border-t border-black/10 z-[100] dark:bg-white/20 dark:border-white/20"
+      className="fixed bottom-0 left-0 right-0 bg-tg-secondary-bg border-t border-black/10 z-[100] dark:bg-gray-900/95 dark:border-white/30 backdrop-blur-sm"
       style={{
         paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
         paddingTop: '8px',
