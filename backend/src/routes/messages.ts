@@ -92,23 +92,39 @@ router.post('/webhook', async (req: Request, res: Response) => {
       let messageText = `👤 <b>${userName}</b> (ID: ${user.id})\n\n💬 ${message.text}`;
       
       let telegramMessageId: number | null = null;
-      
+
+      // Пытаемся переслать сообщение менеджеру, но даже при ошибке продолжаем обработку,
+      // чтобы чат и сообщения пользователя всё равно попадали в нашу БД
       if (TELEGRAM_MANAGER_ID) {
-        if (firstMessage && firstMessage.telegram_message_id) {
-          // Есть первое сообщение - отправляем как reply
-          telegramMessageId = await sendMessage(
-            parseInt(TELEGRAM_MANAGER_ID),
-            messageText,
-            'HTML',
-            firstMessage.telegram_message_id
+        try {
+          if (firstMessage && firstMessage.telegram_message_id) {
+            // Есть первое сообщение - отправляем как reply
+            telegramMessageId = await sendMessage(
+              parseInt(TELEGRAM_MANAGER_ID),
+              messageText,
+              'HTML',
+              firstMessage.telegram_message_id
+            );
+          } else {
+            // Первое сообщение - отправляем новое с информацией о пользователе
+            telegramMessageId = await sendMessage(
+              parseInt(TELEGRAM_MANAGER_ID),
+              `🔔 <b>Новое сообщение от пользователя</b>\n\n${messageText}`,
+              'HTML'
+            );
+          }
+        } catch (forwardError: any) {
+          logger.error(
+            {
+              error: forwardError?.message,
+              status: forwardError?.response?.status,
+              responseData: forwardError?.response?.data,
+              userId: user.id,
+              managerId: TELEGRAM_MANAGER_ID,
+            },
+            'Failed to forward user message to Telegram manager, saving only to database'
           );
-        } else {
-          // Первое сообщение - отправляем новое с информацией о пользователе
-          telegramMessageId = await sendMessage(
-            parseInt(TELEGRAM_MANAGER_ID),
-            `🔔 <b>Новое сообщение от пользователя</b>\n\n${messageText}`,
-            'HTML'
-          );
+          // telegramMessageId остаётся null — сообщение всё равно будет сохранено ниже
         }
       }
 
