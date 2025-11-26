@@ -19,6 +19,8 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
   const [error, setError] = useState<string | null>(null);
   const [socketError, setSocketError] = useState(false);
   const pollingFallbackRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [chatUserUsername, setChatUserUsername] = useState<string | null>(null);
+  const selectedUserIdRef = useRef<number | null>(null);
 
   const fetchChats = useCallback(async () => {
     if (!isAdmin || !user?.username) {
@@ -57,6 +59,8 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
     try {
       const response = await getChatHistory(user.username!, userId);
       setMessages(response.messages || []);
+      // Сохраняем username пользователя
+      setChatUserUsername(response.user?.username || null);
       
       // Находим товар из первого сообщения с productId
       const firstProductMessage = response.messages.find(
@@ -84,17 +88,33 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
     }
   }, [isAdmin, user?.username]);
 
+  // Обновляем ref при изменении selectedUserId
+  useEffect(() => {
+    selectedUserIdRef.current = selectedUserId;
+  }, [selectedUserId]);
+
   // Обработчик нового сообщения через Socket.io
   const handleNewMessage = useCallback(
     (userId: number, message: ChatMessage) => {
+      const currentSelectedUserId = selectedUserIdRef.current;
+      
       logger.debug('[ChatsPage] New message received via Socket.io', {
         userId,
         messageId: message.id,
-        selectedUserId,
+        direction: message.direction,
+        selectedUserId: currentSelectedUserId,
+        userIdType: typeof userId,
+        selectedUserIdType: typeof currentSelectedUserId,
       });
 
       // Если это сообщение для открытого чата, добавляем его в список
-      if (selectedUserId === userId) {
+      // Сравниваем как числа, на случай если один из них строка
+      if (currentSelectedUserId !== null && Number(currentSelectedUserId) === Number(userId)) {
+        logger.debug('[ChatsPage] Adding message to open chat', {
+          userId,
+          messageId: message.id,
+        });
+        
         setMessages((prev) => {
           // Проверяем, нет ли уже этого сообщения (по ID)
           const existingIndex = prev.findIndex((m) => m.id === message.id);
@@ -116,12 +136,17 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
             price: message.productPrice || undefined,
           });
         }
+      } else {
+        logger.debug('[ChatsPage] Message not for open chat, skipping display', {
+          userId,
+          selectedUserId: currentSelectedUserId,
+        });
       }
 
       // Всегда обновляем список чатов при новом сообщении (но не показываем loading)
       fetchChats();
     },
-    [selectedUserId, fetchChats]
+    [fetchChats]
   );
 
   // Обработчик обновления списка чатов через Socket.io
@@ -190,6 +215,9 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
 
   const handleChatSelect = (userId: number) => {
     setSelectedUserId(userId);
+    setMessages([]);
+    setProduct(null);
+    setChatUserUsername(null);
   };
 
   const handleSendMessage = async (messageText: string) => {
@@ -233,6 +261,7 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
     setSelectedUserId(null);
     setMessages([]);
     setProduct(null);
+    setChatUserUsername(null);
     fetchChats();
   };
 
@@ -293,6 +322,8 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
             product={product}
             onSendMessage={handleSendMessage}
             loading={loading}
+            managerUsername={user?.username || null}
+            chatUserUsername={chatUserUsername}
           />
         </div>
       ) : (

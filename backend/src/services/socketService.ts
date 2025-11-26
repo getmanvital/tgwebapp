@@ -71,6 +71,17 @@ export const initializeSocketService = (io: Server) => {
       adminUsername: socket.adminUsername,
     }, 'Socket client connected');
 
+    // Автоматически присоединяем админа к админской комнате
+    if (socket.adminUsername) {
+      const adminRoom = `admin:${socket.adminUsername}`;
+      socket.join(adminRoom);
+      logger.info({
+        socketId: socket.id,
+        adminUsername: socket.adminUsername,
+        adminRoom,
+      }, 'Admin automatically joined admin room');
+    }
+
     // Обработка присоединения к чату
     socket.on('chat:join', (userId: number) => {
       if (!userId || typeof userId !== 'number') {
@@ -140,19 +151,27 @@ export const emitNewMessage = (userId: number, message: any) => {
     return;
   }
 
-  const room = `chat:${userId}`;
+  const chatRoom = `chat:${userId}`;
+  const adminRoom = `admin:${ADMIN_USERNAME}`;
   
   logger.debug({
     userId,
-    room,
+    chatRoom,
+    adminRoom,
     messageId: message.id,
     direction: message.direction,
-  }, 'Emitting new message to chat room');
+  }, 'Emitting new message to chat room and admin room');
 
-  ioInstance.to(room).emit('chat:new-message', {
+  const eventData = {
     userId,
     message,
-  });
+  };
+
+  // Отправляем в комнату конкретного чата (для админов, которые присоединились к этому чату)
+  ioInstance.to(chatRoom).emit('chat:new-message', eventData);
+  
+  // Также отправляем в админскую комнату (чтобы админ получал все сообщения)
+  ioInstance.to(adminRoom).emit('chat:new-message', eventData);
 };
 
 // Функция для уведомления об обновлении списка чатов

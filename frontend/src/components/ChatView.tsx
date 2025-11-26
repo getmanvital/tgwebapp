@@ -7,9 +7,11 @@ type Props = {
   product: { id: number; title: string; price?: string } | null;
   onSendMessage: (message: string) => Promise<void>;
   loading?: boolean;
+  managerUsername: string | null;
+  chatUserUsername: string | null;
 };
 
-const ChatView = ({ messages, product, onSendMessage, loading }: Props) => {
+const ChatView = ({ messages, product, onSendMessage, loading, managerUsername, chatUserUsername }: Props) => {
   const [inputValue, setInputValue] = useState('');
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -25,6 +27,15 @@ const ChatView = ({ messages, product, onSendMessage, loading }: Props) => {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const getSenderName = (direction: 'user_to_manager' | 'manager_to_user'): string => {
+    if (direction === 'user_to_manager') {
+      // Логин пользователя
+      return chatUserUsername ? `@${chatUserUsername}` : 'Пользователь';
+    }
+    // Логин менеджера
+    return managerUsername ? `@${managerUsername}` : 'Менеджер';
   };
 
   const handleSend = async () => {
@@ -85,33 +96,48 @@ const ChatView = ({ messages, product, onSendMessage, loading }: Props) => {
             <div
               key={message.id}
               className={clsx(
-                'flex',
-                message.direction === 'user_to_manager' ? 'justify-start' : 'justify-end'
+                'flex flex-col gap-1',
+                message.direction === 'user_to_manager' ? 'items-start' : 'items-end'
               )}
             >
+              {/* Подпись отправителя с логином */}
+              <div className={clsx(
+                'text-[11px] text-tg-hint px-1',
+                message.direction === 'user_to_manager' ? 'self-start' : 'self-end'
+              )}>
+                {getSenderName(message.direction)}
+              </div>
+              
               <div
                 className={clsx(
-                  'max-w-[75%] px-3.5 py-2.5 rounded-xl break-words shadow-sm',
-                  message.direction === 'user_to_manager'
-                    ? 'bg-tg-secondary-bg text-tg-text'
-                    : 'bg-tg-button text-white'
+                  'flex',
+                  message.direction === 'user_to_manager' ? 'justify-start' : 'justify-end'
                 )}
               >
-                {message.productTitle && (
-                  <div
-                    className={clsx(
-                      'text-[11px] opacity-80 mb-1 pb-1',
-                      message.direction === 'user_to_manager'
-                        ? 'border-b border-black/10'
-                        : 'border-b border-white/30'
-                    )}
-                  >
-                    📦 {message.productTitle}
+                <div
+                  className={clsx(
+                    'max-w-[75%] px-3.5 py-2.5 rounded-xl break-words shadow-sm',
+                    message.direction === 'user_to_manager'
+                      ? 'bg-tg-secondary-bg text-tg-text'
+                      : 'bg-tg-button text-white'
+                  )}
+                >
+                  {message.productTitle && (
+                    <div
+                      className={clsx(
+                        'text-[11px] opacity-80 mb-1 pb-1',
+                        message.direction === 'user_to_manager'
+                          ? 'border-b border-black/10'
+                          : 'border-b border-white/30'
+                      )}
+                    >
+                      📦 {message.productTitle}
+                    </div>
+                  )}
+                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  <div className="text-[10px] opacity-70 mt-1 text-right">
+                    {formatTime(message.sentAt)}
                   </div>
-                )}
-                <div className="whitespace-pre-wrap">{message.content}</div>
-                <div className="text-[10px] opacity-70 mt-1 text-right">
-                  {formatTime(message.sentAt)}
                 </div>
               </div>
             </div>
