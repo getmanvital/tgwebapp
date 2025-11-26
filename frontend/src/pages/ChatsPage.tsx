@@ -181,14 +181,14 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
                 ← Назад
               </button>
             </div>
-            <h1>
-              Чаты
-              {chats.length > 0 && (
+              <h1>
+                Чаты
+                {chats.length > 0 && (
                 <span className="text-[0.7em] font-normal text-tg-hint ml-2">
-                  ({chats.length})
-                </span>
-              )}
-            </h1>
+                    ({chats.length})
+                  </span>
+                )}
+              </h1>
           </>
         )}
       </header>
