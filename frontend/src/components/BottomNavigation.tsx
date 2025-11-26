@@ -54,7 +54,16 @@ const BottomNavigation = ({ currentPage, onNavigate, isInCollection = false, onB
         >
           <div className="flex flex-col items-center gap-0.5">
             <div className="relative flex items-center justify-center">
-              <HomeIcon style={{ fontSize: 28 }} />
+              <HomeIcon
+                style={{ fontSize: 28 }}
+                className={
+                  isInCollection
+                    ? 'text-tg-hint'
+                    : currentPage === 'home'
+                      ? 'text-tg-button'
+                      : 'text-tg-hint'
+                }
+              />
             </div>
             <span className="text-[11px] leading-none">
               {isInCollection ? 'Назад в каталог' : 'Каталог'}
@@ -70,7 +79,16 @@ const BottomNavigation = ({ currentPage, onNavigate, isInCollection = false, onB
         >
           <div className="flex flex-col items-center gap-0.5">
             <div className="relative flex items-center justify-center">
-              <ShoppingCartIcon style={{ fontSize: 28 }} />
+              <ShoppingCartIcon
+                style={{ fontSize: 28 }}
+                className={
+                  isInCollection
+                    ? 'text-tg-hint'
+                    : currentPage === 'cart'
+                      ? 'text-tg-button'
+                      : 'text-tg-hint'
+                }
+              />
               {cartCount > 0 && (
                 <span
                   className={clsx(
@@ -96,7 +114,16 @@ const BottomNavigation = ({ currentPage, onNavigate, isInCollection = false, onB
         >
           <div className="flex flex-col items-center gap-0.5">
             <div className="flex items-center justify-center">
-              <PersonIcon style={{ fontSize: 28 }} />
+              <PersonIcon
+                style={{ fontSize: 28 }}
+                className={
+                  isInCollection
+                    ? 'text-tg-hint'
+                    : currentPage === 'profile'
+                      ? 'text-tg-button'
+                      : 'text-tg-hint'
+                }
+              />
             </div>
             <span className="text-[11px] leading-none">Профиль</span>
           </div>

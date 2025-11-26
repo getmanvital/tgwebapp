@@ -25,6 +25,7 @@ function App() {
   const [chatsPageKey, setChatsPageKey] = useState(0);
   const homePageRef = useRef<HomePageRef>(null);
   const user = useTelegramUser();
+  const [isInCollection, setIsInCollection] = useState(false);
   
   useTelegram();
   useTelegramTheme(); // Определяем и применяем тему Telegram
@@ -104,17 +105,18 @@ function App() {
   };
 
   const getBottomNavPage = (): 'home' | 'cart' | 'profile' => {
-    if (currentPage === 'users' || currentPage === 'chats') {
-      return 'profile';
-    }
     if (currentPage === 'cart') {
       return 'cart';
     }
+
+    if (currentPage === 'profile' || currentPage === 'users' || currentPage === 'chats') {
+      // Профиль и его вложенные разделы
+      return 'profile';
+    }
+
+    // Всё остальное считаем главной (каталог)
     return 'home';
   };
-
-  // Находимся ли мы сейчас внутри конкретной подборки (на главной, но выбран альбом)
-  const isInCollection = currentPage === 'home' && (homePageRef.current?.isInCollection?.() ?? false);
 
   // Навигация свайпом: при свайпе вправо возвращаемся назад
   // ВАЖНО: Все хуки должны вызываться до любых условных возвратов
@@ -153,7 +155,12 @@ function App() {
     <CartProvider>
       <ToastProvider>
         <div className="min-h-screen bg-tg-bg">
-          {currentPage === 'home' && <HomePage ref={homePageRef} />}
+          {currentPage === 'home' && (
+            <HomePage
+              ref={homePageRef}
+              onCollectionChange={(inCollection) => setIsInCollection(inCollection)}
+            />
+          )}
           {currentPage === 'cart' && <CartPage />}
           {currentPage === 'profile' && (
             <ProfilePage
@@ -168,7 +175,7 @@ function App() {
             <BottomNavigation
               currentPage={getBottomNavPage()}
               onNavigate={handleNavigate}
-              isInCollection={isInCollection}
+              isInCollection={currentPage === 'home' && isInCollection}
               onBackToCatalog={() => homePageRef.current?.resetCollection()}
             />
           )}

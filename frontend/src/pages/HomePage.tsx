@@ -13,10 +13,13 @@ import { logger } from '../utils/logger';
 
 export type HomePageRef = {
   resetCollection: () => void;
-  isInCollection: () => boolean;
 };
 
-const HomePage = forwardRef<HomePageRef>((props, ref) => {
+type Props = {
+  onCollectionChange?: (inCollection: boolean) => void;
+};
+
+const HomePage = forwardRef<HomePageRef>(({ onCollectionChange }: Props, ref) => {
   const { hideContactButton } = useTelegramContact();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<string>();
@@ -29,8 +32,12 @@ const HomePage = forwardRef<HomePageRef>((props, ref) => {
     resetCollection: () => {
       setSelectedCollection(undefined);
     },
-    isInCollection: () => !!selectedCollection,
   }));
+
+  // Сообщаем в App, находимся ли в подборке
+  useEffect(() => {
+    onCollectionChange?.(!!selectedCollection);
+  }, [selectedCollection, onCollectionChange]);
 
   useEffect(() => {
     setLoading(true);
