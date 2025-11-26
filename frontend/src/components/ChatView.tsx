@@ -134,7 +134,7 @@ const ChatView = ({ messages, product, onSendMessage, loading, managerUsername, 
                       📦 {message.productTitle}
                     </div>
                   )}
-                  <div className="whitespace-normal" style={{ overflowWrap: 'break-word', wordBreak: 'normal' }}>
+                  <div className="whitespace-normal">
                     {message.content}
                   </div>
                   <div className="text-[10px] opacity-70 mt-1 text-right">
