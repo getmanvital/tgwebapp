@@ -19,7 +19,7 @@ const BottomNavigation = ({ currentPage, onNavigate, isInCollection = false, onB
 
   const getButtonClasses = (isActive: boolean) =>
     clsx(
-      'flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] px-2 py-1 rounded-lg transition-colors',
+      'flex-1 flex flex-col items-center justify-center gap-0.5 min-w-[44px] min-h-[44px] px-2 py-1 rounded-lg transition-colors',
       isInCollection
         ? 'text-tg-hint' // в подборке все иконки неактивны визуально
         : isActive
