@@ -78,14 +78,17 @@ export function useSwipeNavigation({
 
     if (window.Telegram?.WebApp) {
       try {
-        // Пытаемся отключить закрытие приложения при свайпе
-        // Используем type assertion, так как метод может быть доступен, но не в типах
+        // Пытаемся отключить закрытие/сворачивание приложения при вертикальном свайпе
+        // В API 7.7+ есть прямой метод disableVerticalSwipes, используем его при наличии,
+        // а enableClosingConfirmation оставляем как резервный вариант.
         const webApp = window.Telegram.WebApp as any;
-        if (typeof webApp.enableClosingConfirmation === 'function') {
+        if (typeof webApp.disableVerticalSwipes === 'function') {
+          webApp.disableVerticalSwipes();
+        } else if (typeof webApp.enableClosingConfirmation === 'function') {
           webApp.enableClosingConfirmation();
         }
       } catch (error) {
-        console.warn('Failed to enable closing confirmation:', error);
+        console.warn('Failed to disable vertical swipes / enable closing confirmation:', error);
       }
     }
   }, [disabled]);

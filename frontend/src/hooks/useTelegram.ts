@@ -17,6 +17,8 @@ declare global {
       WebApp: {
         ready: () => void;
         expand: () => void;
+        disableVerticalSwipes?: () => void;
+        enableVerticalSwipes?: () => void;
         themeParams: TelegramThemeParams;
         onEvent: (event: string, callback: () => void) => void;
         offEvent: (event: string, callback: () => void) => void;
@@ -64,6 +66,12 @@ export const useTelegram = () => {
       const tg = window.Telegram.WebApp;
       tg.ready();
       tg.expand();
+
+      // Отключаем вертикальные свайпы (закрытие/сворачивание свайпом вниз),
+      // если метод доступен (WebApp API 7.7+)
+      if (typeof tg.disableVerticalSwipes === 'function') {
+        tg.disableVerticalSwipes();
+      }
     };
 
     if (window.Telegram?.WebApp) {
