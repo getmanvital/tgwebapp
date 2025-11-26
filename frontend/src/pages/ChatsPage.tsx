@@ -1,9 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import ChatsList from '../components/ChatsList';
 import ChatView from '../components/ChatView';
 import { getChats, getChatHistory, sendMessageToClient } from '../services/api';
 import { useTelegramUser } from '../hooks/useTelegramUser';
 import { useIsAdmin } from '../hooks/useIsAdmin';
+import { useChatSocket } from '../hooks/useChatSocket';
 import type { Chat, ChatMessage } from '../services/api';
 import { logger } from '../utils/logger';
 
@@ -16,6 +17,8 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
   const [product, setProduct] = useState<{ id: number; title: string; price?: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [socketError, setSocketError] = useState(false);
+  const pollingFallbackRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchChats = useCallback(async () => {
     if (!isAdmin || !user?.username) {
@@ -81,29 +84,104 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
     }
   }, [isAdmin, user?.username]);
 
+  // Обработчик нового сообщения через Socket.io
+  const handleNewMessage = useCallback(
+    (userId: number, message: ChatMessage) => {
+      logger.debug('[ChatsPage] New message received via Socket.io', {
+        userId,
+        messageId: message.id,
+        selectedUserId,
+      });
+
+      // Если это сообщение для открытого чата, добавляем его в список
+      if (selectedUserId === userId) {
+        setMessages((prev) => {
+          // Проверяем, нет ли уже этого сообщения (по ID)
+          const existingIndex = prev.findIndex((m) => m.id === message.id);
+          if (existingIndex !== -1) {
+            // Обновляем существующее сообщение
+            const updated = [...prev];
+            updated[existingIndex] = message;
+            return updated;
+          }
+          // Добавляем новое сообщение
+          return [...prev, message];
+        });
+
+        // Обновляем товар если он есть в сообщении
+        if (message.productId) {
+          setProduct({
+            id: message.productId,
+            title: message.productTitle || 'Товар',
+            price: message.productPrice || undefined,
+          });
+        }
+      }
+
+      // Всегда обновляем список чатов при новом сообщении (но не показываем loading)
+      fetchChats();
+    },
+    [selectedUserId, fetchChats]
+  );
+
+  // Обработчик обновления списка чатов через Socket.io
+  const handleChatsUpdated = useCallback(
+    (userId?: number) => {
+      logger.debug('[ChatsPage] Chats updated via Socket.io', { userId });
+      fetchChats();
+    },
+    [fetchChats]
+  );
+
+  // Инициализация Socket.io
+  const { status: socketStatus } = useChatSocket({
+    adminUsername: user?.username,
+    enabled: isAdmin && !!user?.username,
+    onNewMessage: handleNewMessage,
+    onChatsUpdated: handleChatsUpdated,
+    currentUserId: selectedUserId,
+  });
+
+  // Начальная загрузка списка чатов
   useEffect(() => {
     fetchChats();
-    
-    // Автообновление списка чатов каждые 3 секунды, если чат не открыт
-    const chatsInterval = setInterval(() => {
-      if (!selectedUserId) {
-        fetchChats();
+  }, [fetchChats]);
+
+  // Fallback polling при ошибке Socket.io
+  useEffect(() => {
+    const isSocketError = socketStatus === 'error';
+    setSocketError(isSocketError);
+
+    // Очищаем предыдущий polling fallback
+    if (pollingFallbackRef.current) {
+      clearInterval(pollingFallbackRef.current);
+      pollingFallbackRef.current = null;
+    }
+
+    // Запускаем редкий polling fallback при ошибке Socket.io
+    if (isSocketError) {
+      logger.warn('[ChatsPage] Socket.io error, using polling fallback');
+      pollingFallbackRef.current = setInterval(() => {
+        if (!selectedUserId) {
+          fetchChats();
+        } else {
+          fetchChatHistory(selectedUserId, true);
+        }
+      }, 30000); // Каждые 30 секунд вместо 2-3
+    }
+
+    return () => {
+      if (pollingFallbackRef.current) {
+        clearInterval(pollingFallbackRef.current);
+        pollingFallbackRef.current = null;
       }
-    }, 3000);
+    };
+  }, [socketStatus, selectedUserId, fetchChats, fetchChatHistory]);
 
-    return () => clearInterval(chatsInterval);
-  }, [fetchChats, selectedUserId]);
-
+  // Загрузка истории чата при выборе
   useEffect(() => {
     if (selectedUserId) {
       fetchChatHistory(selectedUserId);
-      
-      // Автообновление истории каждые 2 секунды (тихое обновление без показа loading)
-      const interval = setInterval(() => {
-        fetchChatHistory(selectedUserId, true);
-      }, 2000);
-
-      return () => clearInterval(interval);
     } else {
       setMessages([]);
       setProduct(null);
@@ -122,8 +200,9 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
     try {
       await sendMessageToClient(user.username, selectedUserId, messageText);
       
-      // Добавляем сообщение в локальное состояние
-      const newMessage: ChatMessage = {
+      // Сообщение будет получено через Socket.io событие
+      // Но для оптимистичного обновления добавляем временное сообщение
+      const optimisticMessage: ChatMessage = {
         id: Date.now(), // Временный ID
         direction: 'manager_to_user',
         content: messageText,
@@ -134,15 +213,16 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
         readAt: null,
       };
       
-      setMessages((prev) => [...prev, newMessage]);
+      setMessages((prev) => [...prev, optimisticMessage]);
       
       // Обновляем список чатов
       fetchChats();
       
-      // Обновляем историю для получения реального ID сообщения
+      // Обновляем историю через небольшой таймаут для получения реального ID
+      // (если Socket.io событие не придет)
       setTimeout(() => {
-        fetchChatHistory(selectedUserId);
-      }, 500);
+        fetchChatHistory(selectedUserId, true);
+      }, 1000);
     } catch (error) {
       logger.error('[ChatsPage] Error sending message:', error);
       throw error;
@@ -196,6 +276,13 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
       {error && (
         <div className="error p-4 m-4">
           {error}
+        </div>
+      )}
+
+      {socketError && (
+        <div className="bg-tg-secondary-bg border border-tg-hint rounded-lg p-3 m-4 text-sm text-tg-hint">
+          <span className="inline-block mr-2">⚠️</span>
+          Реальное время недоступно. Используется обновление каждые 30 секунд.
         </div>
       )}
 

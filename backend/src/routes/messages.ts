@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { messagesQueries, usersQueries, productsQueries, pool } from '../database/schema.js';
 import { sendMessage, sendPhoto } from '../services/telegramBot.js';
 import { getPhotoPath } from '../services/photoService.js';
+import { emitNewMessage, emitChatsUpdated } from '../services/socketService.js';
 import pino from 'pino';
 
 const router = Router();
@@ -143,6 +144,21 @@ router.post('/webhook', async (req: Request, res: Response) => {
         telegramMessageId,
         messageId,
       }, 'Message saved to database');
+
+      // Отправляем Socket.io событие для обновления чата в реальном времени
+      const messageData = {
+        id: messageId,
+        direction: 'user_to_manager' as const,
+        content: message.text,
+        productId: null,
+        productTitle: null,
+        productPrice: null,
+        sentAt: new Date(now).toISOString(),
+        readAt: null,
+      };
+
+      emitNewMessage(user.id, messageData);
+      emitChatsUpdated(user.id);
     }
 
     res.status(200).json({ ok: true });
@@ -297,6 +313,21 @@ router.post('/contact', async (req: Request, res: Response) => {
       messageId,
       telegramMessageId,
     }, 'Contact message saved to database');
+
+    // Отправляем Socket.io событие для обновления чата в реальном времени
+    const messageData = {
+      id: messageId,
+      direction: 'user_to_manager' as const,
+      content: caption.replace(/<[^>]*>/g, ''),
+      productId: productExists ? productId : null,
+      productTitle: productTitle || null,
+      productPrice: priceText || null,
+      sentAt: new Date(now).toISOString(),
+      readAt: null,
+    };
+
+    emitNewMessage(userId, messageData);
+    emitChatsUpdated(userId);
 
     res.json({
       success: true,
@@ -478,7 +509,7 @@ router.post('/chats/:userId/send', async (req: Request, res: Response) => {
 
     // Сохраняем сообщение в БД
     const now = Date.now();
-    await messagesQueries.insert(
+    const messageId = await messagesQueries.insert(
       userId,
       null,
       'manager_to_user',
@@ -486,6 +517,21 @@ router.post('/chats/:userId/send', async (req: Request, res: Response) => {
       message.trim(),
       now
     );
+
+    // Отправляем Socket.io событие для обновления чата в реальном времени
+    const messageData = {
+      id: messageId,
+      direction: 'manager_to_user' as const,
+      content: message.trim(),
+      productId: null,
+      productTitle: null,
+      productPrice: null,
+      sentAt: new Date(now).toISOString(),
+      readAt: null,
+    };
+
+    emitNewMessage(userId, messageData);
+    emitChatsUpdated(userId);
 
     res.json({
       success: true,

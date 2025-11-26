@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import compression from 'compression';
 import express, { type Request, type Response, type NextFunction } from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import pino from 'pino';
 import path from 'path';
 import fs from 'fs';
@@ -11,6 +13,7 @@ import syncRouter from './routes/sync.js';
 import authRouter from './routes/auth.js';
 import messagesRouter from './routes/messages.js';
 import { PHOTOS_DIR } from './database/schema.js';
+import { initializeSocketService } from './services/socketService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -122,10 +125,31 @@ if (fs.existsSync(frontendDistPath)) {
   logger.warn({ frontendPath: frontendDistPath }, 'Frontend not found, serving API info on root');
 }
 
-app.listen(PORT, () => {
+// Создаем HTTP сервер для Socket.io
+const httpServer = createServer(app);
+
+// Инициализируем Socket.io сервер
+const io = new Server(httpServer, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
+  transports: ['websocket', 'polling'],
+});
+
+// Экспортируем io для использования в других модулях
+export { io };
+
+// Инициализируем Socket.io сервис
+initializeSocketService(io);
+
+// Запускаем HTTP сервер
+httpServer.listen(PORT, () => {
   logger.info({ PORT }, 'Backend service started');
   logger.info('Database initialized');
   logger.info({ photosDir: PHOTOS_DIR }, 'Photos directory ready');
+  logger.info('Socket.io server initialized');
 });
 
 
