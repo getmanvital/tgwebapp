@@ -238,7 +238,7 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
 
   return (
     <main className="h-full flex flex-col">
-      <header className="flex flex-col gap-3">
+      <header className="flex flex-col gap-3 sticky top-0 z-50 bg-tg-bg pb-2">
         {selectedUserId ? (
           <>
             <div className="flex items-center">
@@ -287,7 +287,7 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
       )}
 
       {selectedUserId ? (
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0 pb-[calc(72px+max(16px,env(safe-area-inset-bottom)))]">
           <ChatView
             messages={messages}
             product={product}
