@@ -134,7 +134,12 @@ const ChatView = ({ messages, product, onSendMessage, loading, managerUsername, 
                       📦 {message.productTitle}
                     </div>
                   )}
-                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  <div className={clsx(
+                    "break-words",
+                    message.content.length > 100 ? "whitespace-pre-wrap" : "whitespace-normal"
+                  )}>
+                    {message.content}
+                  </div>
                   <div className="text-[10px] opacity-70 mt-1 text-right">
                     {formatTime(message.sentAt)}
                   </div>

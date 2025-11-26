@@ -124,8 +124,29 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
             updated[existingIndex] = message;
             return updated;
           }
+          
+          // Удаляем все оптимистичные сообщения с временным ID (больше текущего времени минус 10 секунд)
+          // и с таким же контентом, если это сообщение от менеджера
+          const tenSecondsAgo = Date.now() - 10000;
+          const filtered = prev.filter((m) => {
+            // Если это временное сообщение (ID больше чем 10 секунд назад) 
+            // и совпадает контент и направление (от менеджера)
+            if (m.id > tenSecondsAgo && 
+                m.direction === 'manager_to_user' && 
+                message.direction === 'manager_to_user' &&
+                m.content === message.content) {
+              logger.debug('[ChatsPage] Removing optimistic message', {
+                optimisticId: m.id,
+                realId: message.id,
+                content: m.content,
+              });
+              return false; // Удаляем оптимистичное сообщение
+            }
+            return true;
+          });
+          
           // Добавляем новое сообщение
-          return [...prev, message];
+          return [...filtered, message];
         });
 
         // Обновляем товар если он есть в сообщении
@@ -225,33 +246,35 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
       throw new Error('User ID or admin username not available');
     }
 
+    // Создаем временный ID для оптимистичного сообщения
+    const optimisticMessageId = Date.now();
+    
+    // Оптимистичное сообщение для мгновенного отображения
+    const optimisticMessage: ChatMessage = {
+      id: optimisticMessageId, // Временный ID
+      direction: 'manager_to_user',
+      content: messageText,
+      productId: null,
+      productTitle: null,
+      productPrice: null,
+      sentAt: new Date().toISOString(),
+      readAt: null,
+    };
+    
+    // Добавляем оптимистичное сообщение сразу
+    setMessages((prev) => [...prev, optimisticMessage]);
+
     try {
       await sendMessageToClient(user.username, selectedUserId, messageText);
-      
-      // Сообщение будет получено через Socket.io событие
-      // Но для оптимистичного обновления добавляем временное сообщение
-      const optimisticMessage: ChatMessage = {
-        id: Date.now(), // Временный ID
-        direction: 'manager_to_user',
-        content: messageText,
-        productId: null,
-        productTitle: null,
-        productPrice: null,
-        sentAt: new Date().toISOString(),
-        readAt: null,
-      };
-      
-      setMessages((prev) => [...prev, optimisticMessage]);
       
       // Обновляем список чатов
       fetchChats();
       
-      // Обновляем историю через небольшой таймаут для получения реального ID
-      // (если Socket.io событие не придет)
-      setTimeout(() => {
-        fetchChatHistory(selectedUserId, true);
-      }, 1000);
+      // Сообщение будет получено через Socket.io событие, которое заменит оптимистичное
+      // Убираем таймаут с fetchChatHistory, так как Socket.io должен прийти быстрее
     } catch (error) {
+      // При ошибке удаляем оптимистичное сообщение
+      setMessages((prev) => prev.filter(msg => msg.id !== optimisticMessageId));
       logger.error('[ChatsPage] Error sending message:', error);
       throw error;
     }
