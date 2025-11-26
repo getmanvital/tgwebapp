@@ -18,7 +18,7 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [socketError, setSocketError] = useState(false);
-  const pollingFallbackRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingFallbackRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchChats = useCallback(async () => {
     if (!isAdmin || !user?.username) {
