@@ -113,6 +113,9 @@ function App() {
     return 'home';
   };
 
+  // Находимся ли мы сейчас внутри конкретной подборки (на главной, но выбран альбом)
+  const isInCollection = currentPage === 'home' && (homePageRef.current?.isInCollection?.() ?? false);
+
   // Навигация свайпом: при свайпе вправо возвращаемся назад
   // ВАЖНО: Все хуки должны вызываться до любых условных возвратов
   useSwipeNavigation({
@@ -162,7 +165,12 @@ function App() {
           {currentPage === 'chats' && <ChatsPage key={chatsPageKey} onBack={handleNavigateToProfile} />}
           
           {(currentPage === 'home' || currentPage === 'cart' || currentPage === 'profile' || currentPage === 'users' || currentPage === 'chats') && (
-            <BottomNavigation currentPage={getBottomNavPage()} onNavigate={handleNavigate} />
+            <BottomNavigation
+              currentPage={getBottomNavPage()}
+              onNavigate={handleNavigate}
+              isInCollection={isInCollection}
+              onBackToCatalog={() => homePageRef.current?.resetCollection()}
+            />
           )}
           <CartPreview />
         </div>

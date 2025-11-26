@@ -9,37 +9,45 @@ const CartPreview = () => {
   const [lastAddedItem, setLastAddedItem] = useState<typeof items[0] | null>(null);
   const lastShownItemRef = useRef<string | null>(null); // Отслеживаем последний показанный товар по ID+времени
 
+  // 1) Реагируем на изменения корзины и решаем, нужно ли показать новое уведомление
   useEffect(() => {
-    if (items.length > 0) {
-      // Получаем последний добавленный товар
-      const sorted = [...items].sort((a, b) => 
-        b.addedAt.getTime() - a.addedAt.getTime()
-      );
-      const newest = sorted[0];
-      
-      // Создаем уникальный ключ для товара: ID + время добавления
-      const itemKey = `${newest.product.id}-${newest.addedAt.getTime()}`;
-      
-      // Показываем превью только если это новый товар (по ключу)
-      if (itemKey !== lastShownItemRef.current) {
-        lastShownItemRef.current = itemKey;
-        setLastAddedItem(newest);
-        setIsVisible(true);
-        
-        // Автоматически скрываем через 4 секунды
-        const timer = setTimeout(() => {
-          setIsVisible(false);
-        }, 4000);
-        
-        return () => clearTimeout(timer);
-      }
-    } else {
+    if (items.length === 0) {
       // Если корзина пуста, сбрасываем состояние
       setIsVisible(false);
       setLastAddedItem(null);
       lastShownItemRef.current = null;
+      return;
     }
+
+    // Берём самый "свежий" товар по addedAt
+    const sorted = [...items].sort((a, b) =>
+      b.addedAt.getTime() - a.addedAt.getTime()
+    );
+    const newest = sorted[0];
+
+    const itemKey = `${newest.product.id}-${newest.addedAt.getTime()}`;
+
+    // Если это тот же самый показанный товар — ничего не делаем
+    if (itemKey === lastShownItemRef.current) {
+      return;
+    }
+
+    // Новый "ивент добавления" — показываем превью
+    lastShownItemRef.current = itemKey;
+    setLastAddedItem(newest);
+    setIsVisible(true);
   }, [items]);
+
+  // 2) Отвечаем только за авто-скрытие уведомления
+  useEffect(() => {
+    if (!isVisible || !lastAddedItem) return;
+
+    const timer = setTimeout(() => {
+      setIsVisible(false);
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, [isVisible, lastAddedItem]);
 
   if (!isVisible || !lastAddedItem) {
     return null;

@@ -18,7 +18,7 @@ const ProductCard = ({ product, onContact }: Props) => {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [fullPhotos, setFullPhotos] = useState<string[] | null>(null);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
-  const { addToCart, isInCart } = useCart();
+  const { addToCart, isInCart, removeFromCart } = useCart();
 
   // Получаем только обложку для карточки товара
   const getThumbPhoto = (): string => {
@@ -184,7 +184,14 @@ const ProductCard = ({ product, onContact }: Props) => {
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addToCart(product);
+
+    if (isInCart(product.id)) {
+      // Товар уже в корзине — повторное нажатие удаляет его
+      removeFromCart(product.id);
+    } else {
+      // Товара нет — добавляем
+      addToCart(product);
+    }
   };
 
   return (
@@ -228,7 +235,7 @@ const ProductCard = ({ product, onContact }: Props) => {
                   ? 'text-green-500 bg-green-500/20 dark:bg-green-500/30'
                   : 'text-tg-text dark:text-white bg-tg-secondary-bg dark:bg-gray-700/80 hover:bg-gray-200 dark:hover:bg-gray-600 shadow-md'
               )}
-              aria-label="Добавить в корзину"
+              aria-label={isInCart(product.id) ? 'Убрать из корзины' : 'Добавить в корзину'}
             >
               {isInCart(product.id) ? (
                 <CheckIcon style={{ fontSize: 28 }} />

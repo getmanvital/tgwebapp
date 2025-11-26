@@ -52,10 +52,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const existingItem = prevItems.find((item) => item.product.id === product.id);
       
       if (existingItem) {
-        // Если товар уже в корзине, увеличиваем количество
+        // Если товар уже в корзине, считаем клик новым "добавлением":
+        // увеличиваем количество и обновляем addedAt, чтобы сработало превью
         return prevItems.map((item) =>
           item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + 1, addedAt: new Date() }
             : item
         );
       } else {

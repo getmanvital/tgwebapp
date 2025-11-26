@@ -13,6 +13,7 @@ import { logger } from '../utils/logger';
 
 export type HomePageRef = {
   resetCollection: () => void;
+  isInCollection: () => boolean;
 };
 
 const HomePage = forwardRef<HomePageRef>((props, ref) => {
@@ -28,6 +29,7 @@ const HomePage = forwardRef<HomePageRef>((props, ref) => {
     resetCollection: () => {
       setSelectedCollection(undefined);
     },
+    isInCollection: () => !!selectedCollection,
   }));
 
   useEffect(() => {
@@ -117,9 +119,19 @@ const HomePage = forwardRef<HomePageRef>((props, ref) => {
     <main className="flex flex-col gap-4 w-full max-w-full box-border pb-[calc(72px+max(16px,env(safe-area-inset-bottom)))]">
       <header className="flex flex-col gap-3">
         {selectedCollection ? (
-              <h1>{selectedCollectionData?.title || 'Товары'}</h1>
+          <>
+            <button
+              type="button"
+              onClick={() => setSelectedCollection(undefined)}
+              className="inline-flex items-center gap-1 text-sm text-tg-hint hover:text-tg-text"
+            >
+              <span className="text-lg leading-none">←</span>
+              <span>Назад в каталог</span>
+            </button>
+            <h1>{selectedCollectionData?.title || 'Товары'}</h1>
+          </>
         ) : (
-            <h1>Коллекции</h1>
+          <h1>Коллекции</h1>
         )}
       </header>
 
