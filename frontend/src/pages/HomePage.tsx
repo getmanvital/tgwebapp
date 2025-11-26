@@ -19,7 +19,7 @@ type Props = {
   onCollectionChange?: (inCollection: boolean) => void;
 };
 
-const HomePage = forwardRef<HomePageRef>(({ onCollectionChange }: Props, ref) => {
+const HomePage = forwardRef<HomePageRef, Props>(({ onCollectionChange }, ref) => {
   const { hideContactButton } = useTelegramContact();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<string>();

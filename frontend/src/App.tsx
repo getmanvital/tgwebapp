@@ -158,7 +158,7 @@ function App() {
           {currentPage === 'home' && (
             <HomePage
               ref={homePageRef}
-              onCollectionChange={(inCollection) => setIsInCollection(inCollection)}
+              onCollectionChange={(inCollection: boolean) => setIsInCollection(inCollection)}
             />
           )}
           {currentPage === 'cart' && <CartPage />}
