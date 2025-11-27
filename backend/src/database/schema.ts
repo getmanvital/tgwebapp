@@ -167,6 +167,9 @@ const initDatabase = async (): Promise<void> => {
         direction TEXT NOT NULL CHECK (direction IN ('user_to_manager', 'manager_to_user')),
         telegram_message_id BIGINT,
         content TEXT NOT NULL,
+        attachment_type TEXT,
+        attachment_url TEXT,
+        attachment_meta JSONB,
         sent_at BIGINT NOT NULL,
         read_at BIGINT,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -184,6 +187,11 @@ const initDatabase = async (): Promise<void> => {
       CREATE INDEX IF NOT EXISTS idx_messages_product_id ON messages(product_id);
       CREATE INDEX IF NOT EXISTS idx_messages_sent_at ON messages(sent_at DESC);
       CREATE INDEX IF NOT EXISTS idx_messages_read_at ON messages(read_at) WHERE read_at IS NULL;
+      CREATE INDEX IF NOT EXISTS idx_messages_attachment_type ON messages(attachment_type) WHERE attachment_type IS NOT NULL;
+
+      ALTER TABLE messages ADD COLUMN IF NOT EXISTS attachment_type TEXT;
+      ALTER TABLE messages ADD COLUMN IF NOT EXISTS attachment_url TEXT;
+      ALTER TABLE messages ADD COLUMN IF NOT EXISTS attachment_meta JSONB;
     `);
 
     // Миграция: проверяем наличие колонки sort_order
@@ -410,19 +418,55 @@ export const usersQueries = {
 
 // Подготовленные запросы для сообщений
 export const messagesQueries = {
-  insert: async (
-    userId: number,
-    productId: number | null,
-    direction: 'user_to_manager' | 'manager_to_user',
-    telegramMessageId: number | null,
-    content: string,
-    sentAt: number
-  ): Promise<number> => {
-    const result = await pool.query(`
-      INSERT INTO messages (user_id, product_id, direction, telegram_message_id, content, sent_at)
-      VALUES ($1, $2, $3, $4, $5, $6)
+  insert: async ({
+    userId,
+    productId,
+    direction,
+    telegramMessageId,
+    content,
+    sentAt,
+    attachmentType = null,
+    attachmentUrl = null,
+    attachmentMeta = null,
+  }: {
+    userId: number;
+    productId: number | null;
+    direction: 'user_to_manager' | 'manager_to_user';
+    telegramMessageId: number | null;
+    content: string;
+    sentAt: number;
+    attachmentType?: string | null;
+    attachmentUrl?: string | null;
+    attachmentMeta?: Record<string, unknown> | null;
+  }): Promise<number> => {
+    const result = await pool.query(
+      `
+      INSERT INTO messages (
+        user_id,
+        product_id,
+        direction,
+        telegram_message_id,
+        content,
+        attachment_type,
+        attachment_url,
+        attachment_meta,
+        sent_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING id
-    `, [userId, productId, direction, telegramMessageId, content, sentAt]);
+    `,
+      [
+        userId,
+        productId,
+        direction,
+        telegramMessageId,
+        content,
+        attachmentType,
+        attachmentUrl,
+        attachmentMeta ? JSON.stringify(attachmentMeta) : null,
+        sentAt,
+      ],
+    );
     return result.rows[0].id;
   },
 
@@ -477,7 +521,10 @@ export const messagesQueries = {
           content,
           direction,
           sent_at,
-          product_id
+          product_id,
+          attachment_type,
+          attachment_url,
+          attachment_meta
         FROM messages
         ORDER BY user_id, sent_at DESC
       )
@@ -492,6 +539,9 @@ export const messagesQueries = {
         lm.direction as last_message_direction,
         lm.sent_at as last_message_time,
         lm.product_id,
+        lm.attachment_type,
+        lm.attachment_url,
+        lm.attachment_meta,
         p.title as product_title,
         (SELECT COUNT(*) FROM messages WHERE user_id = u.id AND direction = 'user_to_manager' AND read_at IS NULL) as unread_count
       FROM last_messages lm

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import ChatsList from '../components/ChatsList';
 import ChatView from '../components/ChatView';
-import { getChats, getChatHistory, sendMessageToClient } from '../services/api';
+import { getChats, getChatHistory, sendMessageToClient, sendImageToClient } from '../services/api';
 import { useTelegramUser } from '../hooks/useTelegramUser';
 import { useIsAdmin } from '../hooks/useIsAdmin';
 import { useChatSocket } from '../hooks/useChatSocket';
@@ -280,6 +280,20 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
     }
   };
 
+  const handleSendImage = async (file: File, caption?: string) => {
+    if (!selectedUserId || !user?.username) {
+      throw new Error('User ID or admin username not available');
+    }
+
+    try {
+      await sendImageToClient(user.username, selectedUserId, file, caption);
+      fetchChats();
+    } catch (error) {
+      logger.error('[ChatsPage] Error sending image:', error);
+      throw error;
+    }
+  };
+
   const handleBackToList = () => {
     setSelectedUserId(null);
     setMessages([]);
@@ -344,6 +358,7 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
             messages={messages}
             product={product}
             onSendMessage={handleSendMessage}
+            onSendImage={handleSendImage}
             loading={loading}
             managerUsername={user?.username || null}
             chatUserUsername={chatUserUsername}

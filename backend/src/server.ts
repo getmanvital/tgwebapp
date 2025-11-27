@@ -14,6 +14,7 @@ import authRouter from './routes/auth.js';
 import messagesRouter from './routes/messages.js';
 import { PHOTOS_DIR } from './database/schema.js';
 import { initializeSocketService } from './services/socketService.js';
+import { getChatUploadsDir } from './services/storageService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,6 +72,14 @@ app.use('/photos', express.static(PHOTOS_DIR, {
   etag: true, // Включаем ETag для условных запросов
   lastModified: true, // Включаем Last-Modified заголовок
   immutable: true, // Помечаем как неизменяемые ресурсы
+}));
+
+// Раздача локальных загрузок чатов (используется в dev, если S3 не настроен)
+const CHAT_UPLOADS_DIR = getChatUploadsDir();
+app.use('/uploads/chat', express.static(CHAT_UPLOADS_DIR, {
+  maxAge: '7d',
+  etag: true,
+  lastModified: true,
 }));
 
 app.get('/health', (_req: Request, res: Response) => {

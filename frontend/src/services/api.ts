@@ -388,6 +388,18 @@ export const sendProductContactRequest = async (
   }
 };
 
+export type ChatAttachmentMeta = {
+  provider?: string;
+  key?: string;
+  relativePath?: string;
+  mimeType?: string;
+  size?: number;
+  width?: number;
+  height?: number;
+  format?: string;
+  [key: string]: unknown;
+};
+
 export interface Chat {
   userId: number;
   userName: string;
@@ -401,6 +413,9 @@ export interface Chat {
     content: string;
     direction: 'user_to_manager' | 'manager_to_user';
     sentAt: string;
+    attachmentType: 'image' | null;
+    attachmentUrl: string | null;
+    attachmentMeta: ChatAttachmentMeta | null;
   };
   product: {
     id: number;
@@ -458,6 +473,9 @@ export interface ChatMessage {
   productPrice: string | null;
   sentAt: string;
   readAt: string | null;
+  attachmentType: 'image' | null;
+  attachmentUrl: string | null;
+  attachmentMeta: ChatAttachmentMeta | null;
 }
 
 export interface ChatHistoryResponse {
@@ -557,6 +575,55 @@ export const sendMessageToClient = async (
     return data;
   } catch (error: any) {
     logger.error('[API] Error sending message to client:', {
+      error: error?.message,
+      status: error?.response?.status,
+      responseData: error?.response?.data,
+      adminUsername,
+      userId,
+    });
+    throw error;
+  }
+};
+
+export const sendImageToClient = async (
+  adminUsername: string,
+  userId: number,
+  file: File,
+  caption?: string
+): Promise<{ success: boolean; messageId: number; sentAt: string; attachmentUrl: string }> => {
+  try {
+    if (!adminUsername) {
+      throw new Error('Admin username is required');
+    }
+
+    if (!file) {
+      throw new Error('Image file is required');
+    }
+
+    const normalizedUsername = normalizeUsername(adminUsername);
+    const client = getClient();
+    const formData = new FormData();
+    formData.append('file', file);
+    if (caption && caption.trim().length > 0) {
+      formData.append('caption', caption.trim());
+    }
+
+    const { data } = await client.post(`/messages/chats/${userId}/send-image`, formData, {
+      headers: {
+        'X-Admin-Username': normalizedUsername,
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 30000,
+    });
+
+    logger.debug('[API] Image sent to client successfully', {
+      userId,
+      messageId: data.messageId,
+    });
+
+    return data;
+  } catch (error: any) {
+    logger.error('[API] Error sending image to client:', {
       error: error?.message,
       status: error?.response?.status,
       responseData: error?.response?.data,
