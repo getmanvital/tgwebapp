@@ -14,6 +14,7 @@
     "@types/compression": "^1.7.5",
     "@types/express": "^4.17.21",
     "@aws-sdk/client-s3": "^3.684.0",
+    "@aws-sdk/credential-provider-node": "^3.684.0",
     "@types/node": "^22.7.4",
     "@types/pg": "^8.11.10",
     "@types/qs": "^6.9.16",
