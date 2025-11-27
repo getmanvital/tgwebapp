@@ -259,6 +259,9 @@ const ChatsPage = ({ onBack }: { onBack: () => void }) => {
       productPrice: null,
       sentAt: new Date().toISOString(),
       readAt: null,
+      attachmentType: null,
+      attachmentUrl: null,
+      attachmentMeta: null,
     };
     
     // Добавляем оптимистичное сообщение сразу
