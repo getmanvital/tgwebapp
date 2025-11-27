@@ -110,13 +110,13 @@ const ChatView = ({ messages, product, onSendMessage, loading, managerUsername, 
               
               <div
                 className={clsx(
-                  'flex',
+                  'flex w-full',
                   message.direction === 'user_to_manager' ? 'justify-start' : 'justify-end'
                 )}
               >
                 <div
                   className={clsx(
-                    'max-w-[75%] min-w-0 px-3.5 py-2.5 rounded-xl shadow-sm',
+                    'max-w-[75%] min-w-0 px-3.5 py-2.5 rounded-xl shadow-sm overflow-hidden',
                     message.direction === 'user_to_manager'
                       ? 'bg-tg-secondary-bg text-tg-text'
                       : 'bg-tg-button text-white'
@@ -134,7 +134,7 @@ const ChatView = ({ messages, product, onSendMessage, loading, managerUsername, 
                       📦 {message.productTitle}
                     </div>
                   )}
-                  <div className="whitespace-normal">
+                  <div className="whitespace-normal break-words">
                     {message.content}
                   </div>
                   <div className="text-[10px] opacity-70 mt-1 text-right">
