@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express';
+import type { Express } from 'express';
 import multer from 'multer';
 import pino from 'pino';
 import { messagesQueries, usersQueries, productsQueries } from '../database/schema.js';
@@ -9,6 +10,9 @@ import { uploadChatImage, type StoredFile } from '../services/storageService.js'
 
 const router = Router();
 const logger = pino();
+type MulterRequest = Request & {
+  file?: Express.Multer.File;
+};
 
 const TELEGRAM_MANAGER_ID = process.env.TELEGRAM_MANAGER_ID;
 const ADMIN_USERNAME = 'getmanvit';
@@ -652,7 +656,7 @@ router.get('/chats/:userId', async (req: Request, res: Response) => {
 });
 
 // Отправка изображения клиенту от менеджера (только для администратора)
-router.post('/chats/:userId/send-image', upload.single('file'), async (req: Request, res: Response) => {
+router.post('/chats/:userId/send-image', upload.single('file'), async (req: MulterRequest, res: Response) => {
   try {
     const adminUsername = req.headers['x-admin-username'] as string | undefined;
     const userId = parseInt(req.params.userId, 10);
@@ -666,15 +670,17 @@ router.post('/chats/:userId/send-image', upload.single('file'), async (req: Requ
       return res.status(400).json({ error: 'Invalid user ID' });
     }
 
-    if (!req.file) {
+    const uploadedFile = req.file;
+
+    if (!uploadedFile) {
       return res.status(400).json({ error: 'Image file is required' });
     }
 
-    if (!ALLOWED_IMAGE_TYPES.has(req.file.mimetype)) {
+    if (!ALLOWED_IMAGE_TYPES.has(uploadedFile.mimetype)) {
       return res.status(400).json({ error: 'Unsupported image type. Use JPEG, PNG или WEBP' });
     }
 
-    if (req.file.size > MAX_IMAGE_SIZE) {
+    if (uploadedFile.size > MAX_IMAGE_SIZE) {
       return res.status(400).json({ error: 'Image is too large. Maximum 5MB' });
     }
 
@@ -686,9 +692,9 @@ router.post('/chats/:userId/send-image', upload.single('file'), async (req: Requ
     }
 
     const storedFile = await uploadChatImage({
-      buffer: req.file.buffer,
-      mimeType: req.file.mimetype,
-      originalName: req.file.originalname,
+      buffer: uploadedFile.buffer,
+      mimeType: uploadedFile.mimetype,
+      originalName: uploadedFile.originalname,
       userId,
     });
 
