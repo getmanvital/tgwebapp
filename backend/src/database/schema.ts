@@ -187,11 +187,12 @@ const initDatabase = async (): Promise<void> => {
       CREATE INDEX IF NOT EXISTS idx_messages_product_id ON messages(product_id);
       CREATE INDEX IF NOT EXISTS idx_messages_sent_at ON messages(sent_at DESC);
       CREATE INDEX IF NOT EXISTS idx_messages_read_at ON messages(read_at) WHERE read_at IS NULL;
-      CREATE INDEX IF NOT EXISTS idx_messages_attachment_type ON messages(attachment_type) WHERE attachment_type IS NOT NULL;
-
+      
       ALTER TABLE messages ADD COLUMN IF NOT EXISTS attachment_type TEXT;
       ALTER TABLE messages ADD COLUMN IF NOT EXISTS attachment_url TEXT;
       ALTER TABLE messages ADD COLUMN IF NOT EXISTS attachment_meta JSONB;
+      
+      CREATE INDEX IF NOT EXISTS idx_messages_attachment_type ON messages(attachment_type) WHERE attachment_type IS NOT NULL;
     `);
 
     // Миграция: проверяем наличие колонки sort_order
