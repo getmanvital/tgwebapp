@@ -23,12 +23,61 @@ npm run dev
 cp env.example .env
 ```
 
+## Настройка Telegram Webhook
+
+### Автоматическая настройка (рекомендуется)
+
+Webhook автоматически настроится при старте сервера, если в `.env` установлено:
+
+```env
+AUTO_SETUP_WEBHOOK=true
+TELEGRAM_BOT_TOKEN=ваш_токен
+TELEGRAM_MANAGER_ID=ваш_id
+BACKEND_URL=https://ваш_домен.com
+```
+
+При запуске `npm start` или `pm2 start ecosystem.config.js` webhook настроится автоматически.
+
+### Ручная настройка
+
+Если нужно настроить webhook вручную:
+
+```bash
+# Настроить webhook
+npm run webhook:setup
+
+# Проверить статус webhook
+npm run webhook:info
+
+# Удалить webhook
+npm run webhook:delete
+```
+
+### Post-deploy скрипт
+
+После деплоя можно запустить автоматическую настройку:
+
+```bash
+# Linux/Mac
+bash scripts/post-deploy.sh
+
+# Windows
+.\scripts\post-deploy.ps1
+```
+
+**Важно:** 
+- Webhook требует HTTPS (Telegram не работает с HTTP)
+- Убедитесь, что `BACKEND_URL` в `.env` указывает на публичный URL с HTTPS
+- `TELEGRAM_BOT_TOKEN` должен быть получен от [@BotFather](https://t.me/botfather)
+- `TELEGRAM_MANAGER_ID` - это числовой ID менеджера (получите у [@userinfobot](https://t.me/userinfobot))
+
 | Переменная              | Описание                                    | По умолчанию |
 | ----------------------- | ------------------------------------------- | ------------ |
 | `VK_API_TOKEN`          | Токен standalone-приложения                 | -            |
 | `VK_GROUP_ID`           | ID группы с товарами                        | -            |
 | `TELEGRAM_BOT_TOKEN`    | Токен Telegram-бота                         | -            |
 | `TELEGRAM_MANAGER_ID`   | ID менеджера для пересылки сообщений        | -            |
+| `AUTO_SETUP_WEBHOOK`    | Автоматическая настройка webhook при старте | true         |
 | `BACKEND_URL`           | Публичный URL backend                       | http://localhost:4000 |
 | `PORT`                  | Порт HTTP сервера                           | 4000         |
 | `DATABASE_URL`          | Строка подключения PostgreSQL               | postgresql://postgres@localhost:5432/tgwebapp |

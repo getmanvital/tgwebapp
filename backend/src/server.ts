@@ -15,6 +15,7 @@ import messagesRouter from './routes/messages.js';
 import { PHOTOS_DIR } from './database/schema.js';
 import { initializeSocketService } from './services/socketService.js';
 import { getChatUploadsDir } from './services/storageService.js';
+import { autoSetupWebhook, getWebhookStatus } from './services/webhookService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -80,8 +81,19 @@ app.use('/uploads/chat', express.static(CHAT_UPLOADS_DIR, {
   lastModified: true,
 }));
 
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', timestamp: Date.now() });
+app.get('/health', async (_req: Request, res: Response) => {
+  const webhookStatus = await getWebhookStatus();
+  res.json({ 
+    status: 'ok', 
+    timestamp: Date.now(),
+    webhook: webhookStatus.configured ? {
+      configured: true,
+      hasErrors: webhookStatus.hasErrors,
+      pendingUpdates: webhookStatus.pendingUpdates,
+    } : {
+      configured: false,
+    },
+  });
 });
 
 app.use('/auth', authRouter);
@@ -156,11 +168,21 @@ export { io };
 initializeSocketService(io);
 
 // Запускаем HTTP сервер
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, async () => {
   logger.info({ PORT }, 'Backend service started');
   logger.info('Database initialized');
   logger.info({ photosDir: PHOTOS_DIR }, 'Photos directory ready');
   logger.info('Socket.io server initialized');
+  
+  // Автоматическая настройка webhook (если включено)
+  try {
+    await autoSetupWebhook();
+  } catch (error: any) {
+    logger.error(
+      { error: error?.message },
+      'Failed to auto-setup webhook (non-critical)'
+    );
+  }
 });
 
 

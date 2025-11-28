@@ -8,7 +8,10 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "get-group-id": "tsx src/scripts/getGroupId.ts"
+    "get-group-id": "tsx src/scripts/getGroupId.ts",
+    "webhook:setup": "tsx src/scripts/setupWebhook.ts set",
+    "webhook:info": "tsx src/scripts/setupWebhook.ts info",
+    "webhook:delete": "tsx src/scripts/setupWebhook.ts delete"
   },
   "dependencies": {
     "@types/compression": "^1.7.5",

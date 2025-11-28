@@ -60,6 +60,50 @@ bash scripts/setup-env.sh
 2. **Frontend:** Соберите проект (`npm run build`), настройте Nginx для раздачи статики
 3. **SSL:** Настройте HTTPS (обязательно для Telegram WebApp) через Let's Encrypt
 4. **Telegram:** Создайте бота через BotFather, настройте WebApp с URL вашего frontend
+5. **Webhook:** Настройте webhook для получения уведомлений: `npm run webhook:setup`
+
+## Telegram Webhook
+
+### Автоматическая настройка ✨
+
+Webhook настраивается **автоматически** при старте сервера! Просто убедитесь, что в `backend/.env` указаны:
+
+```env
+AUTO_SETUP_WEBHOOK=true
+TELEGRAM_BOT_TOKEN=ваш_токен_от_botfather
+TELEGRAM_MANAGER_ID=ваш_числовой_id
+BACKEND_URL=https://ваш_домен.com
+```
+
+При деплое или перезапуске сервера webhook настроится сам.
+
+### Ручная настройка (опционально)
+
+Если нужно настроить вручную:
+
+```bash
+# Установка webhook
+cd backend
+npm run webhook:setup
+
+# Проверка статуса
+npm run webhook:info
+```
+
+Или используйте скрипты:
+```bash
+# Linux/Mac
+bash scripts/post-deploy.sh
+
+# Windows
+.\scripts\post-deploy.ps1
+```
+
+**Требования:**
+- `TELEGRAM_BOT_TOKEN` - токен от [@BotFather](https://t.me/botfather)
+- `TELEGRAM_MANAGER_ID` - ваш числовой ID (получите у [@userinfobot](https://t.me/userinfobot))
+- `BACKEND_URL` - публичный URL с HTTPS
+- `AUTO_SETUP_WEBHOOK=true` - для автоматической настройки
 
 
 

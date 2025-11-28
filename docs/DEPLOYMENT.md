@@ -295,7 +295,85 @@ sudo certbot renew --dry-run
    - Ссылку на ваше WebApp
    - Инструкции по добавлению кнопки в меню бота
 
-### 3. Добавление кнопки в меню бота
+### 3. Настройка Webhook для получения сообщений
+
+Для того чтобы менеджер получал уведомления о сообщениях от клиентов, необходимо настроить webhook:
+
+#### 3.1. Получение ID менеджера
+
+1. Найдите в Telegram бота [@userinfobot](https://t.me/userinfobot)
+2. Отправьте ему любое сообщение
+3. Скопируйте ваш числовой ID (например: `123456789`)
+4. Добавьте в `.env` файл Backend: `TELEGRAM_MANAGER_ID=123456789`
+
+#### 3.2. Автоматическая настройка webhook (рекомендуется)
+
+Добавьте в `backend/.env` на сервере:
+
+```env
+AUTO_SETUP_WEBHOOK=true
+```
+
+Webhook автоматически настроится при старте/перезапуске сервера:
+
+```bash
+pm2 restart backend
+# Webhook настроится автоматически
+```
+
+Проверьте логи:
+```bash
+pm2 logs backend
+# Должно быть: ✅ Webhook auto-configured successfully
+```
+
+#### 3.3. Ручная настройка webhook (если AUTO_SETUP_WEBHOOK=false)
+
+**Способ 1: Post-deploy скрипт**
+
+```bash
+bash scripts/post-deploy.sh
+```
+
+**Способ 2: Через npm скрипт**
+
+```bash
+cd backend
+npm run webhook:setup
+```
+
+**Способ 3: Вручную через curl**
+
+```bash
+curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://yourdomain.com/messages/webhook",
+    "allowed_updates": ["message"]
+  }'
+```
+
+**Проверка статуса webhook:**
+
+```bash
+# Через npm
+cd backend
+npm run webhook:info
+
+# Через health endpoint
+curl https://yourdomain.com/health
+
+# Или напрямую через Telegram API
+curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getWebhookInfo"
+```
+
+**Важно:**
+- Webhook требует HTTPS (Telegram не работает с HTTP)
+- Убедитесь, что `BACKEND_URL` в `.env` указывает на публичный URL с HTTPS
+- С `AUTO_SETUP_WEBHOOK=true` webhook настроится автоматически при старте
+- После настройки webhook сообщения от пользователей будут приходить менеджеру в Telegram
+
+### 4. Добавление кнопки в меню бота
 
 Отправьте BotFather команду `/mybots`, выберите вашего бота, затем:
 1. Выберите "Bot Settings" → "Menu Button"
@@ -304,7 +382,7 @@ sudo certbot renew --dry-run
 4. Выберите "Web App"
 5. Введите URL: `https://yourdomain.com`
 
-### 4. Альтернативный способ: через Bot API
+### 5. Альтернативный способ: через Bot API
 
 Вы также можете настроить кнопку программно через Bot API:
 
