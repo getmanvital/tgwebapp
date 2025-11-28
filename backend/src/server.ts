@@ -55,8 +55,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Admin-Username');
-  // Включаем кэширование на 5 минут для ускорения
-  res.setHeader('Cache-Control', 'public, max-age=300');
   
   // Обработка preflight запросов
   if (req.method === 'OPTIONS') {
@@ -101,6 +99,7 @@ if (fs.existsSync(frontendDistPath)) {
     etag: true,
     lastModified: true,
     immutable: true,
+    index: false,
   }));
 
   // Catch-all для фронтенда: все остальные GET запросы возвращают index.html
@@ -114,6 +113,9 @@ if (fs.existsSync(frontendDistPath)) {
 
     const indexPath = path.join(frontendDistPath, 'index.html');
     if (fs.existsSync(indexPath)) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       res.sendFile(indexPath);
     } else {
       res.status(404).json({ error: 'Frontend not found' });
